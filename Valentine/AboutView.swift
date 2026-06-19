@@ -67,7 +67,7 @@ struct AboutView: View {
                         ])
                         
                         CreditSection(title: "LICENSE", items: [
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                            "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.",
                             "",
                             "Copyright © 2026 JesusChapman",
                             "This program is open source ❤️"
