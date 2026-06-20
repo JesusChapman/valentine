@@ -183,7 +183,7 @@ struct ContentView: View {
 }
 
 struct HoverZoomButton: View {
-    let title: String
+    let title: LocalizedStringKey
     let isPrimary: Bool
     let action: () -> Void
     

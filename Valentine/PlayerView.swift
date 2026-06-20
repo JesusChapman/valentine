@@ -140,7 +140,7 @@ struct PlayerView: View {
                 .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.showLyrics))
                 
                 Button(action: {
-                    engine.showLyricsEditor = true
+                    engine.checkAndShowLyricsEditor()
                 }) {
                     Image(systemName: "pencil")
                         .font(.system(size: 14))

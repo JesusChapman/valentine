@@ -64,10 +64,16 @@ struct RootView: View {
             LyricsEditorView()
                 .environmentObject(engine)
         }
+        .sheet(isPresented: $engine.showMutagenInstaller) {
+            MutagenInstallerView {
+                engine.showLyricsEditor = true
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AddFile"))) { _ in engine.showAddFileDialog() }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AddFolder"))) { _ in engine.showAddFolderDialog() }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ClearPlaylist"))) { _ in engine.clearPlaylist() }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EditLyrics"))) { _ in engine.showLyricsEditor = true }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EditLyrics"))) { _ in engine.checkAndShowLyricsEditor() }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ReinstallMutagen"))) { _ in engine.showMutagenInstaller = true }
     }
     
     private func configureWindow(forMiniPlayer: Bool) {
@@ -157,6 +163,10 @@ struct ValentineCommands: Commands {
             
             Button(action: { openWindow(id: "lyricsAppearance") }) {
                 Label("Modify Appearance", systemImage: "textformat.alt")
+            }
+            
+            Button(action: { NotificationCenter.default.post(name: NSNotification.Name("ReinstallMutagen"), object: nil) }) {
+                Label("Reinstall Mutagen", systemImage: "arrow.triangle.2.circlepath")
             }
         }
         

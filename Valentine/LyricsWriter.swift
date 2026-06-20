@@ -6,9 +6,9 @@ class LyricsWriter {
 import sys
 import os
 
-# Add the app's Resources/mutagen.zip to sys.path so we can import bundled mutagen
-resources_path = sys.argv[1]
-sys.path.insert(0, os.path.join(resources_path, "mutagen.zip"))
+# Add the newly downloaded mutagen library path to sys.path
+mutagen_path = sys.argv[1]
+sys.path.insert(0, mutagen_path)
 
 import mutagen
 
@@ -61,8 +61,8 @@ if __name__ == "__main__":
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         
-        let resourcesPath = Bundle.main.resourcePath ?? ""
-        process.arguments = ["python3", scriptURL.path, resourcesPath, url.path, lyrics]
+        let mutagenPath = MutagenInstallerService.mutagenLibraryPath
+        process.arguments = ["python3", scriptURL.path, mutagenPath, url.path, lyrics]
         
         let pipe = Pipe()
         process.standardOutput = pipe

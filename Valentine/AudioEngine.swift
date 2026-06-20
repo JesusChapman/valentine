@@ -19,6 +19,7 @@ class AudioEngine: ObservableObject {
     @Published var duration: TimeInterval = 0
     @Published var showLyrics: Bool = false
     @Published var showLyricsEditor: Bool = false
+    @Published var showMutagenInstaller: Bool = false
     
     @Published var repeatMode: RepeatMode = .off
     @Published var shuffleMode: Bool = false
@@ -385,5 +386,15 @@ class AudioEngine: ObservableObject {
         var track = queue[index]
         track.updateLyrics(from: text)
         queue[index] = track
+    }
+    
+    func checkAndShowLyricsEditor() {
+        let path = MutagenInstallerService.mutagenTargetDirectory.appendingPathComponent("mutagen").path
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue {
+            showLyricsEditor = true
+        } else {
+            showMutagenInstaller = true
+        }
     }
 }
