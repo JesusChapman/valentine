@@ -14,6 +14,9 @@ struct ContentView: View {
     @State private var isPlaylistVisible = true
     @State private var wasWide = true
     
+    @AppStorage("lastNormalWidth") private var lastNormalWidth: Double = 900
+    @AppStorage("lastNormalHeight") private var lastNormalHeight: Double = 600
+    
     var body: some View {
         GeometryReader { geometry in
             let isWide = geometry.size.width > 600
@@ -72,8 +75,11 @@ struct ContentView: View {
                 }
             }
             .toolbarBackground(.hidden, for: .windowToolbar)
-            .onChange(of: geometry.size.width) { newWidth in
-                let newIsWide = newWidth >= 600
+            .onChange(of: geometry.size) { newSize in
+                lastNormalWidth = Double(newSize.width)
+                lastNormalHeight = Double(newSize.height)
+                
+                let newIsWide = newSize.width >= 600
                 if newIsWide != wasWide {
                     wasWide = newIsWide
                     if !newIsWide {
@@ -87,7 +93,7 @@ struct ContentView: View {
         .onDrop(of: ["public.file-url"], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
         }
-        .frame(minWidth: 400, minHeight: 540)
+        .frame(minWidth: 400, maxWidth: .infinity, minHeight: 540, maxHeight: .infinity)
     }
     
     private var backgroundLayer: some View {
@@ -133,31 +139,13 @@ struct ContentView: View {
                 .padding(.horizontal, 40)
             
             VStack(spacing: 12) {
-                Button(action: {
+                HoverZoomButton(title: "Add Folder...", isPrimary: true) {
                     selectFiles(directories: true)
-                }) {
-                    Text("Add Folder...")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 160, height: 40)
-                        .background(Color.accentColor.opacity(0.6))
-                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .buttonStyle(.plain)
                 
-                Button(action: {
+                HoverZoomButton(title: "Add File...", isPrimary: false) {
                     selectFiles(directories: false)
-                }) {
-                    Text("Add File...")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .frame(width: 160, height: 40)
-                        .background(Color.secondary.opacity(0.2))
-                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .buttonStyle(.plain)
             }
             .padding(.top, 16)
         }
@@ -191,5 +179,36 @@ struct ContentView: View {
             engine.addTracks(urls)
         }
         return true
+    }
+}
+
+struct HoverZoomButton: View {
+    let title: String
+    let isPrimary: Bool
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(isPrimary ? .white : .primary)
+                .frame(width: 160, height: 40)
+                .background(isPrimary ? Color.accentColor.opacity(0.6) : Color.secondary.opacity(0.2))
+                .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .scaleEffect(isHovered ? 1.05 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
+                .onHover { hovering in
+                    isHovered = hovering
+                    if hovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+        }
+        .buttonStyle(.plain)
     }
 }

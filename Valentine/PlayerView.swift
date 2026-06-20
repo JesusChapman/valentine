@@ -85,21 +85,45 @@ struct PlayerView: View {
             Spacer(minLength: 16)
             
             HStack(spacing: 24) {
-                Button(action: { /* Toggle Shuffle */ }) {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        engine.shuffleMode.toggle()
+                    }
+                }) {
                     Image(systemName: "shuffle")
                         .font(.system(size: 14))
-                        .foregroundColor(.primary)
+                        .foregroundColor(engine.shuffleMode ? .primary : .primary.opacity(0.4))
                         .frame(width: 32, height: 32)
                 }
-                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: false))
+                .contentTransition(.symbolEffect(.replace))
+                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.shuffleMode))
                 
-                Button(action: { /* Toggle Repeat */ }) {
-                    Image(systemName: "repeat")
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .frame(width: 32, height: 32)
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        switch engine.repeatMode {
+                        case .off: engine.repeatMode = .one
+                        case .one: engine.repeatMode = .all
+                        case .all: engine.repeatMode = .off
+                        }
+                    }
+                }) {
+                    Group {
+                        if engine.repeatMode == .one {
+                            Image(systemName: "repeat.1")
+                                .foregroundColor(.primary)
+                        } else if engine.repeatMode == .all {
+                            Image(systemName: "repeat")
+                                .foregroundColor(.primary)
+                        } else {
+                            Image(systemName: "repeat")
+                                .foregroundColor(.primary.opacity(0.4))
+                        }
+                    }
+                    .font(.system(size: 14))
+                    .frame(width: 32, height: 32)
                 }
-                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: false))
+                .contentTransition(.symbolEffect(.replace))
+                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.repeatMode != .off))
                 
                 Spacer()
                 

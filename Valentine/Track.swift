@@ -15,6 +15,7 @@ struct Track: Identifiable, Hashable {
     var artist: String
     var album: String?
     var albumArt: Image?
+    var nsImage: NSImage?
     var duration: TimeInterval
     var lyrics: [LyricLine]?
 
@@ -25,6 +26,7 @@ struct Track: Identifiable, Hashable {
         self.artist = "Unknown Artist"
         self.album = nil
         self.albumArt = nil
+        self.nsImage = nil
         self.duration = 0
         self.lyrics = nil
     }
@@ -68,8 +70,9 @@ struct Track: Identifiable, Hashable {
                         }
                     case AVMetadataKey.commonKeyArtwork.rawValue:
                         if let value = try await item.load(.dataValue),
-                           let nsImage = NSImage(data: value) {
-                            self.albumArt = Image(nsImage: nsImage)
+                           let image = NSImage(data: value) {
+                            self.nsImage = image
+                            self.albumArt = Image(nsImage: image)
                         }
                     default:
                         break

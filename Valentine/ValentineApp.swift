@@ -25,6 +25,13 @@ struct ValentineApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .defaultSize(width: 650, height: 480)
+        
+        Window("Modify Appearance", id: "lyricsAppearance") {
+            LyricsAppearanceView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 400, height: 600)
     }
 }
 
@@ -32,6 +39,9 @@ struct RootView: View {
     @StateObject private var engine = AudioEngine()
     @AppStorage("isMiniPlayerMode") private var isMiniPlayerMode = false
     @AppStorage("appTheme") private var appTheme = 0
+    
+    @AppStorage("lastNormalWidth") private var lastNormalWidth: Double = 900
+    @AppStorage("lastNormalHeight") private var lastNormalHeight: Double = 600
     
     var body: some View {
         Group {
@@ -87,8 +97,12 @@ struct RootView: View {
                         
                         var newFrame = window.frame
                         let oldHeight = newFrame.size.height
-                        newFrame.size = NSSize(width: 900, height: 600)
-                        newFrame.origin.y -= (600 - oldHeight)
+                        
+                        let targetWidth = max(400, CGFloat(lastNormalWidth))
+                        let targetHeight = max(540, CGFloat(lastNormalHeight))
+                        
+                        newFrame.size = NSSize(width: targetWidth, height: targetHeight)
+                        newFrame.origin.y -= (targetHeight - oldHeight)
                         window.setFrame(newFrame, display: true, animate: true)
                     }
                 }
@@ -108,56 +122,76 @@ struct ValentineCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About Valentine") {
+            Button(action: {
                 openWindow(id: "about")
+            }) {
+                Label("About Valentine", systemImage: "info.circle")
             }
         }
         
         CommandGroup(replacing: .newItem) {
-            Button("Add File...") { NotificationCenter.default.post(name: NSNotification.Name("AddFile"), object: nil) }
-                .keyboardShortcut("o", modifiers: [.command])
+            Button(action: { NotificationCenter.default.post(name: NSNotification.Name("AddFile"), object: nil) }) {
+                Label("Add File...", systemImage: "doc.badge.plus")
+            }
+            .keyboardShortcut("o", modifiers: [.command])
             
-            Button("Add Folder...") { NotificationCenter.default.post(name: NSNotification.Name("AddFolder"), object: nil) }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
+            Button(action: { NotificationCenter.default.post(name: NSNotification.Name("AddFolder"), object: nil) }) {
+                Label("Add Folder...", systemImage: "folder.badge.plus")
+            }
+            .keyboardShortcut("o", modifiers: [.command, .shift])
             
             Divider()
             
-            Button("Clear Playlist") { NotificationCenter.default.post(name: NSNotification.Name("ClearPlaylist"), object: nil) }
-                .keyboardShortcut(.delete, modifiers: [.command])
+            Button(action: { NotificationCenter.default.post(name: NSNotification.Name("ClearPlaylist"), object: nil) }) {
+                Label("Clear Playlist", systemImage: "trash")
+            }
+            .keyboardShortcut(.delete, modifiers: [.command])
         }
         
         CommandGroup(after: .textEditing) {
             Divider()
-            Button("Edit Lyrics") { NotificationCenter.default.post(name: NSNotification.Name("EditLyrics"), object: nil) }
-                .keyboardShortcut("e", modifiers: [.command])
+            Button(action: { NotificationCenter.default.post(name: NSNotification.Name("EditLyrics"), object: nil) }) {
+                Label("Edit Lyrics", systemImage: "music.note.list")
+            }
+            .keyboardShortcut("e", modifiers: [.command])
+            
+            Button(action: { openWindow(id: "lyricsAppearance") }) {
+                Label("Modify Appearance", systemImage: "textformat.alt")
+            }
         }
         
         CommandGroup(after: .toolbar) {
             Divider()
-            Menu("Synced Lyrics Settings") {
+            Menu {
                 Toggle("Glow Effect", isOn: $isGlowEffectEnabled)
                 Toggle("Neon Effect", isOn: $isNeonEffectEnabled)
+            } label: {
+                Label("Synced Lyrics Settings", systemImage: "sparkles")
             }
-            Menu("Mini Player Background") {
+            Menu {
                 Picker("Mode", selection: $miniPlayerGlassMode) {
                     Text("Tinted (System Theme)").tag(0)
                     Text("Transparent (No Tint)").tag(1)
                 }
                 .pickerStyle(InlinePickerStyle())
+            } label: {
+                Label("Mini Player Background", systemImage: "macwindow")
             }
-            Menu("App Theme") {
+            Menu {
                 Picker("Theme", selection: $appTheme) {
                     Text("Follow System").tag(0)
                     Text("Light").tag(1)
                     Text("Dark").tag(2)
                 }
                 .pickerStyle(InlinePickerStyle())
+            } label: {
+                Label("App Theme", systemImage: "paintpalette")
             }
         }
         
         CommandGroup(after: .windowList) {
-            Button(isMiniPlayerMode ? "Switch to Full Player" : "Switch to Mini-Player") {
-                isMiniPlayerMode.toggle()
+            Button(action: { isMiniPlayerMode.toggle() }) {
+                Label(isMiniPlayerMode ? "Switch to Full Player" : "Switch to Mini-Player", systemImage: isMiniPlayerMode ? "arrow.up.left.and.arrow.down.right" : "pip.enter")
             }
             .keyboardShortcut("m", modifiers: [.command])
         }

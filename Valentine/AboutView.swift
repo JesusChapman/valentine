@@ -8,6 +8,7 @@ struct AboutView: View {
     @State private var contentHeight: CGFloat = 0
     
     let timer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
+    @AppStorage("appTheme") private var appTheme = 0
     
     var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -70,7 +71,7 @@ struct AboutView: View {
                             "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.",
                             "",
                             "Copyright © 2026 JesusChapman",
-                            "This program is open source ❤️"
+                            "A special thanks to everyone involved in making this software a reality."
                         ])
                     }
                     .padding(.horizontal, 30)
@@ -164,6 +165,7 @@ struct AboutView: View {
         .frame(width: 650, height: 480)
         .background(WindowAccessor())
         .background(Material.ultraThin)
+        .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
     }
     
     private func copyVersion() {
@@ -225,6 +227,19 @@ extension Color {
             blue:  Double(b) / 255,
             opacity: Double(a) / 255
         )
+    }
+    
+    func toHex() -> String {
+        guard let nsColor = NSColor(self).usingColorSpace(.sRGB) else {
+            return "#000000"
+        }
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        nsColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let rgb: Int = (Int)(r*255)<<16 | (Int)(g*255)<<8 | (Int)(b*255)<<0
+        return String(format:"#%06x", rgb)
     }
 }
 

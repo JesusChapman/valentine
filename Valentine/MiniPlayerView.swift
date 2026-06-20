@@ -4,6 +4,8 @@ struct MiniPlayerView: View {
     @ObservedObject var engine: AudioEngine
     @State private var showMiniLyrics = false
     @AppStorage("miniPlayerGlassMode") private var miniPlayerGlassMode = 0
+    @Environment(\.colorScheme) var colorScheme
+    @ObservedObject var appearance = LyricsAppearanceManager.shared
     
     private var activeLyricLines: (current: String?, next: String?) {
         guard let lyrics = engine.currentTrack?.lyrics else { return (nil, nil) }
@@ -137,22 +139,23 @@ struct MiniPlayerView: View {
                     VStack(spacing: 8) {
                         let lines = activeLyricLines
                         
+                        let isDark = colorScheme == .dark
                         Text(lines.current ?? "♪")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundColor(engine.isNeonEffectEnabled ? .white : .primary)
+                            .font(.system(size: 18, weight: .bold, design: appearance.getFontDesign(isDark: isDark)))
+                            .foregroundColor(engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark) : appearance.getFontColor(isDark: isDark, isActive: true))
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.8)
-                            .shadow(color: engine.isNeonEffectEnabled ? .white.opacity(0.8) : .clear, radius: 6, x: 0, y: 0)
-                            .shadow(color: engine.isNeonEffectEnabled ? .white.opacity(0.4) : .clear, radius: 12, x: 0, y: 0)
-                            .shadow(color: engine.isGlowEffectEnabled ? .accentColor.opacity(0.6) : .clear, radius: 8, x: 0, y: 0)
+                            .shadow(color: engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark).opacity(0.8) : .clear, radius: 6, x: 0, y: 0)
+                            .shadow(color: engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark).opacity(0.4) : .clear, radius: 12, x: 0, y: 0)
+                            .shadow(color: engine.isGlowEffectEnabled ? appearance.getGlowColor(isDark: isDark).opacity(0.6) : .clear, radius: 8, x: 0, y: 0)
                             .id("current_" + (lines.current ?? ""))
                             .transition(.push(from: .bottom))
                         
                         if let next = lines.next {
                             Text(next)
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundColor(.secondary.opacity(0.7))
+                                .font(.system(size: 12, weight: .medium, design: appearance.getFontDesign(isDark: isDark)))
+                                .foregroundColor(appearance.getFontColor(isDark: isDark, isActive: false))
                                 .multilineTextAlignment(.center)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)

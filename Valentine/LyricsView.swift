@@ -2,6 +2,8 @@ import SwiftUI
 
 struct LyricsView: View {
     @ObservedObject var engine: AudioEngine
+    @Environment(\.colorScheme) var colorScheme
+    @ObservedObject var appearance = LyricsAppearanceManager.shared
     
     private var activeLineIndex: Int? {
         guard let lyrics = engine.currentTrack?.lyrics else { return nil }
@@ -24,13 +26,14 @@ struct LyricsView: View {
                                 ForEach(Array(lyrics.enumerated()), id: \.element.id) { index, line in
                                     let isActive = index == activeLineIndex
                                     
+                                    let isDark = colorScheme == .dark
                                     Text(line.text.isEmpty ? "♪" : line.text)
-                                        .font(.system(size: isActive ? 28 : 22, weight: isActive ? .bold : .medium, design: .rounded))
-                                        .foregroundColor((engine.isNeonEffectEnabled && isActive) ? .white : (isActive ? .primary : .secondary))
-                                        .shadow(color: (engine.isNeonEffectEnabled && isActive) ? .white.opacity(0.8) : .clear, radius: 10, x: 0, y: 0)
-                                        .shadow(color: (engine.isNeonEffectEnabled && isActive) ? .white.opacity(0.4) : .clear, radius: 20, x: 0, y: 0)
-                                        .shadow(color: (engine.isGlowEffectEnabled && isActive) ? .accentColor.opacity(0.8) : .clear, radius: 15, x: 0, y: 0)
-                                        .shadow(color: (engine.isGlowEffectEnabled && isActive) ? .accentColor.opacity(0.5) : .clear, radius: 5, x: 0, y: 0)
+                                        .font(.system(size: isActive ? 28 : 22, weight: isActive ? .bold : .medium, design: LyricsAppearanceManager.shared.getFontDesign(isDark: isDark)))
+                                        .foregroundColor((engine.isNeonEffectEnabled && isActive) ? LyricsAppearanceManager.shared.getNeonColor(isDark: isDark) : LyricsAppearanceManager.shared.getFontColor(isDark: isDark, isActive: isActive))
+                                        .shadow(color: (engine.isNeonEffectEnabled && isActive) ? LyricsAppearanceManager.shared.getNeonColor(isDark: isDark).opacity(0.8) : .clear, radius: 10, x: 0, y: 0)
+                                        .shadow(color: (engine.isNeonEffectEnabled && isActive) ? LyricsAppearanceManager.shared.getNeonColor(isDark: isDark).opacity(0.4) : .clear, radius: 20, x: 0, y: 0)
+                                        .shadow(color: (engine.isGlowEffectEnabled && isActive) ? LyricsAppearanceManager.shared.getGlowColor(isDark: isDark).opacity(0.8) : .clear, radius: 15, x: 0, y: 0)
+                                        .shadow(color: (engine.isGlowEffectEnabled && isActive) ? LyricsAppearanceManager.shared.getGlowColor(isDark: isDark).opacity(0.5) : .clear, radius: 5, x: 0, y: 0)
                                         .multilineTextAlignment(.leading)
                                         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isActive)
                                         .id(index)
