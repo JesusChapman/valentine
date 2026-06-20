@@ -52,6 +52,7 @@ Valentine is made possible by these incredible open-source projects:
 The easiest way to install Valentine is using [Homebrew](https://brew.sh/). Simply run the following command in your terminal:
 
 ```bash
+brew tap jesuschapman/valentine https://github.com/jesuschapman/valentine
 brew install --cask jesuschapman/valentine/valentine
 ```
 
