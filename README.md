@@ -5,7 +5,7 @@
   <p><strong>The best local music player for MacOS</strong></p>
   <p>The most elegant way to listen to your music files on your Mac, with a native and intuitive interface</p>
 
-  [![macOS](https://img.shields.io/badge/macOS-Tahoe_26+-000000.svg?style=for-the-badge&logo=apple)](https://apple.com) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138.svg?style=for-the-badge&logo=swift)](https://swift.org) [![UI](https://img.shields.io/badge/UI-Liquid_Glass-ff69b4.svg?style=for-the-badge&logo=framer)](#) [![Open Source](https://img.shields.io/badge/Open_Source-%E2%9D%A4-10b981.svg?style=for-the-badge&logo=opensourceinitiative)](#)
+  [![macOS](https://img.shields.io/badge/macOS-Tahoe_26+-000000.svg?style=for-the-badge&logo=apple)](https://apple.com) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138.svg?style=for-the-badge&logo=swift)](https://swift.org) [![Homebrew](https://img.shields.io/badge/Homebrew-Install-F2A344.svg?style=for-the-badge&logo=homebrew)](#-installation) [![UI](https://img.shields.io/badge/UI-Liquid_Glass-ff69b4.svg?style=for-the-badge&logo=framer)](#) [![Open Source](https://img.shields.io/badge/Open_Source-%E2%9D%A4-10b981.svg?style=for-the-badge&logo=opensourceinitiative)](#)
   <br>
   [![GitHub Stars](https://img.shields.io/github/stars/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/issues) [![Latest Release](https://img.shields.io/github/v/release/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/releases/latest) [![Liberapay](https://img.shields.io/badge/Donate-Liberapay-F6C915.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/jesuschapman)
 </div>
@@ -44,6 +44,18 @@ Valentine is made possible by these incredible open-source projects:
 - **[LRCLib](https://lrclib.net/)**: The open-source lyrics API used to seamlessly search and fetch precise, time-synchronized `.lrc` lyrics.
 - **[Mutagen](https://mutagen.readthedocs.io/)**: A highly robust Python multimedia tagging library used by our `MutagenInstallerService` to inject the lyrics securely into the ID3 metadata.
 - **[AVFoundation](https://developer.apple.com/av-foundation/)**: Apple's native framework driving the `AudioEngine`, providing flawless audio playback and waveform data.
+
+---
+
+## 📦 Installation
+
+The easiest way to install Valentine is using [Homebrew](https://brew.sh/). Simply run the following command in your terminal:
+
+```bash
+brew install --cask jesuschapman/valentine/valentine
+```
+
+> **Note:** If macOS Gatekeeper blocks the app on its first launch, you can remove the quarantine flag by executing this command: `xattr -cr /Applications/Valentine.app`
 
 ---
 
