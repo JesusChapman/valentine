@@ -5,18 +5,9 @@
   <p><strong>The best local music player for MacOS</strong></p>
   <p>The most elegant way to listen to your music files on your Mac, with a native and intuitive interface</p>
 
-  <p>
-    [![macOS](https://img.shields.io/badge/macOS-Tahoe_26+-000000.svg?style=for-the-badge&logo=apple)](https://apple.com)
-    [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138.svg?style=for-the-badge&logo=swift)](https://swift.org)
-    [![UI](https://img.shields.io/badge/UI-Liquid_Glass-ff69b4.svg?style=for-the-badge&logo=framer)](#)
-    [![Open Source](https://img.shields.io/badge/Open_Source-%E2%9D%A4-10b981.svg?style=for-the-badge&logo=opensourceinitiative)](#)
-  </p>
-  <p>
-    [![GitHub Stars](https://img.shields.io/github/stars/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/stargazers)
-    [![GitHub Issues](https://img.shields.io/github/issues/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/issues)
-    [![Latest Release](https://img.shields.io/github/v/release/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/releases/latest)
-    [![Liberapay](https://img.shields.io/badge/Donate-Liberapay-F6C915.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/jesuschapman)
-  </p>
+  [![macOS](https://img.shields.io/badge/macOS-Tahoe_26+-000000.svg?style=for-the-badge&logo=apple)](https://apple.com) [![Swift](https://img.shields.io/badge/Swift-5.9+-F05138.svg?style=for-the-badge&logo=swift)](https://swift.org) [![UI](https://img.shields.io/badge/UI-Liquid_Glass-ff69b4.svg?style=for-the-badge&logo=framer)](#) [![Open Source](https://img.shields.io/badge/Open_Source-%E2%9D%A4-10b981.svg?style=for-the-badge&logo=opensourceinitiative)](#)
+  <br>
+  [![GitHub Stars](https://img.shields.io/github/stars/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/issues) [![Latest Release](https://img.shields.io/github/v/release/jesuschapman/valentine.svg?style=for-the-badge&logo=github)](https://github.com/jesuschapman/valentine/releases/latest) [![Liberapay](https://img.shields.io/badge/Donate-Liberapay-F6C915.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/jesuschapman)
 </div>
 
 <br/>
