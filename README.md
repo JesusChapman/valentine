@@ -52,8 +52,9 @@ Valentine is made possible by these incredible open-source projects:
 The easiest way to install Valentine is using [Homebrew](https://brew.sh/). Simply run the following command in your terminal:
 
 ```bash
-brew tap jesuschapman/valentine https://github.com/jesuschapman/valentine
-brew install --cask jesuschapman/valentine/valentine
+brew tap jesuschapman/homebrew https://github.com/JesusChapman/homebrew
+brew trust jesuschapman/homebrew
+brew install --cask valentine
 ```
 
 > **Note:** If macOS Gatekeeper blocks the app on its first launch, you can remove the quarantine flag by executing this command: `xattr -cr /Applications/Valentine.app`
