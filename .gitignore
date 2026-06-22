@@ -7,3 +7,6 @@ Valentine/Config/Secrets.swift
 **/.DS_Store
 xcuserdata/
 **/xcuserdata/
+
+build/
+*.pkg
