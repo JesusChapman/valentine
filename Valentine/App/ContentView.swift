@@ -7,90 +7,106 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
-
+import Combine
+import CoreSpotlight
 struct ContentView: View {
     @EnvironmentObject var engine: AudioEngine
     @Environment(\.colorScheme) var colorScheme
     @State private var isTargeted = false
     @State private var isPlaylistVisible = true
-    @State private var wasWide = true
-    @State private var windowSize: CGSize? = nil
-    
+    @State private var selectedTab: LibraryTab = .home
+    @State private var showFullPlayer = false
+
     @AppStorage("lastNormalWidth") private var lastNormalWidth: Double = 900
     @AppStorage("lastNormalHeight") private var lastNormalHeight: Double = 600
-    
+
     var body: some View {
-        GeometryReader { geometry in
-            let currentWidth = geometry.size.width
-            let isWide = currentWidth > 600
-            
-            Group {
-                if engine.queue.isEmpty {
-                    emptyStateView
-                } else {
-                    HStack(spacing: 0) {
-                        if isPlaylistVisible {
-                            PlaylistView(engine: engine)
-                                .frame(minWidth: isWide ? 280 : nil,
-                                       idealWidth: isWide ? 280 : nil,
-                                       maxWidth: isWide ? 280 : .infinity,
-                                       maxHeight: .infinity)
-                                .background(Color.black.opacity(0.2))
-                                .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
+        Group {
+            if engine.queue.isEmpty {
+                emptyStateView
+            } else {
+                // Audirvana layout: library on top, full-width transport bar pinned below.
+                VStack(spacing: 0) {
+                    LibrarySidebar(engine: engine, selectedTab: $selectedTab)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .safeAreaInset(edge: .top) {
+                            // Clear the window's traffic-light buttons.
+                            Color.clear.frame(height: 28)
                         }
-                        
-                        if isWide || !isPlaylistVisible {
-                            PlayerView(
-                                engine: engine,
-                                togglePlaylist: {
-                                    withAnimation(.spring()) {
-                                        isPlaylistVisible.toggle()
-                                    }
-                                },
-                                isPlaylistVisible: isPlaylistVisible,
-                                showToggle: !isWide
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
+
+                    BottomBarView(engine: engine) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            showFullPlayer.toggle()
                         }
                     }
                 }
-            }
-            .background(backgroundLayer)
-            .toolbar {
-                ToolbarItem(placement: .navigation) {
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            isPlaylistVisible.toggle()
-                        }
-                    }) {
-                        Image(systemName: "sidebar.left")
-                    }
-                }
-            }
-            .toolbarBackground(.hidden, for: .windowToolbar)
-            .onDrop(of: ["public.file-url"], isTargeted: $isTargeted) { providers in
-                handleDrop(providers: providers)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onChange(of: geometry.size) { _, newSize in
-                lastNormalWidth = Double(newSize.width)
-                lastNormalHeight = Double(newSize.height)
-                
-                let newIsWide = newSize.width >= 600
-                if newIsWide != wasWide {
-                    wasWide = newIsWide
-                    if !newIsWide {
-                        isPlaylistVisible = false
-                    } else {
-                        isPlaylistVisible = true
+                .overlay(alignment: .bottom) {
+                    if showFullPlayer {
+                        fullPlayerOverlay
+                            .transition(.move(edge: .bottom))
                     }
                 }
             }
         }
-        .frame(minWidth: 400, minHeight: 540)
+        .background(backgroundLayer)
+
+        .background(backgroundLayer)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: {
+                    withAnimation(.spring()) { showFullPlayer.toggle() }
+                }) {
+                    Image(systemName: showFullPlayer ? "chevron.down" : "rectangle.expand.vertical")
+                }
+            }
+        }
+        .toolbarBackground(.hidden, for: .windowToolbar)
+        .onDrop(of: ["public.file-url"], isTargeted: $isTargeted) { providers in
+            handleDrop(providers: providers)
+        }
+        .frame(minWidth: 600, minHeight: 540)
+        .onAppear { engine.restoreLibrary() }
+        .onReceive(engine.$queue) { _ in engine.persistLibrary() }
+        .onReceive(engine.$queue) { _ in engine.scheduleSpotlightReindex() }
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            engine.handleSpotlightActivity(activity.userInfo ?? [:])
+        }
+
     }
-    
+
+    // Full now-playing view (the original PlayerView), slid up over the library.
+    private var fullPlayerOverlay: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        showFullPlayer = false
+                    }
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 12)
+                .padding(.top, 8)
+            }
+
+            PlayerView(
+                engine: engine,
+                togglePlaylist: {},
+                isPlaylistVisible: isPlaylistVisible,
+                showToggle: false
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(.ultraThinMaterial)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(edges: .bottom)
+    }
+
     private var backgroundLayer: some View {
         Group {
             if engine.queue.isEmpty {
@@ -120,7 +136,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             if let appIcon = NSImage(named: NSImage.applicationIconName) {
@@ -148,22 +164,22 @@ struct ContentView: View {
                     )
                     .padding(.bottom, 60)
             }
-            
+
             Text("Valentine")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
-            
+
             Text("Select a file or a folder, or drag files from your file manager to\nthe application window to add songs to the playlist")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            
+
             VStack(spacing: 12) {
                 HoverZoomButton(title: "Add Folder...", isPrimary: true) {
                     selectFiles(directories: true)
                 }
-                
+
                 HoverZoomButton(title: "Add File...", isPrimary: false) {
                     selectFiles(directories: false)
                 }
@@ -172,24 +188,28 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private func selectFiles(directories: Bool) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = directories
         panel.canChooseFiles = !directories
-        panel.allowedContentTypes = [.audio]
-        
+        // Only restrict to audio when picking files; a folder filter would
+        // disable the Open button when choosing directories.
+        if !directories {
+            panel.allowedContentTypes = [.audio]
+        }
+
         if panel.runModal() == .OK {
             engine.addTracks(panel.urls)
         }
     }
-    
+
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
         let group = DispatchGroup()
         let queue = DispatchQueue(label: "dropQueue")
         var urls: [URL] = []
-        
+
         for provider in providers {
             group.enter()
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { (urlData, error) in
@@ -197,17 +217,13 @@ struct ContentView: View {
                 if let urlData = urlData as? Data,
                    let urlString = String(data: urlData, encoding: .utf8),
                    let url = URL(string: urlString) {
-                    queue.async {
-                        urls.append(url)
-                    }
+                    queue.async { urls.append(url) }
                 } else if let url = urlData as? URL {
-                    queue.async {
-                        urls.append(url)
-                    }
+                    queue.async { urls.append(url) }
                 }
             }
         }
-        
+
         group.notify(queue: .main) {
             queue.sync {
                 if !urls.isEmpty {
@@ -223,9 +239,9 @@ struct HoverZoomButton: View {
     let title: LocalizedStringKey
     let isPrimary: Bool
     let action: () -> Void
-    
+
     @State private var isHovered = false
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -247,13 +263,5 @@ struct HoverZoomButton: View {
                 }
         }
         .buttonStyle(.plain)
-    }
-}
-
-
-struct WindowSizePreferenceKey: PreferenceKey {
-    static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
     }
 }
