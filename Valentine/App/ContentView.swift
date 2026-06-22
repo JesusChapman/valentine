@@ -194,7 +194,11 @@ struct ContentView: View {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = directories
         panel.canChooseFiles = !directories
-        panel.allowedContentTypes = [.audio]
+        // Only restrict to audio when picking files; a folder filter would
+        // disable the Open button when choosing directories.
+        if !directories {
+            panel.allowedContentTypes = [.audio]
+        }
 
         if panel.runModal() == .OK {
             engine.addTracks(panel.urls)
