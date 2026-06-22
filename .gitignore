@@ -1,3 +1,9 @@
 
 # Local Configuration Files
 Valentine/Config/Secrets.swift
+
+# macOS / Xcode junk
+.DS_Store
+**/.DS_Store
+xcuserdata/
+**/xcuserdata/

@@ -62,6 +62,7 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut, value: isMiniPlayerMode)
+        .installQuickSearch(engine: engine)
         .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
         .onAppear {
             updateTheme(theme: appTheme)

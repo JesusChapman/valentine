@@ -1,15 +1,17 @@
 import SwiftUI
+import Combine
 
 struct PlayerView: View {
     @ObservedObject var engine: AudioEngine
+    @ObservedObject private var favorites = FavoritesStore.shared
     var togglePlaylist: () -> Void
     var isPlaylistVisible: Bool
     var showToggle: Bool
-    
+
     var body: some View {
         VStack(spacing: 8) {
             Spacer(minLength: 0)
-            
+
             Group {
                 if engine.showLyrics {
                     LyricsView(engine: engine)
@@ -46,50 +48,56 @@ struct PlayerView: View {
             .id(engine.currentTrack?.id)
             .transition(.opacity.combined(with: .scale(scale: 0.95)))
             .animation(.easeInOut(duration: 0.4), value: engine.currentTrack?.id)
-            
+
             Spacer(minLength: 0)
-            WaveformView(engine: engine)
-                .frame(height: 50)
+            AudirvanaProgressBar(engine: engine)
                 .padding(.horizontal, 32)
                 .layoutPriority(1)
-            
+
             VStack(spacing: 4) {
                 Text(engine.currentTrack?.title ?? "No Track Selected")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
-                
-                Text(engine.currentTrack?.artist ?? "Unknown Artist")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                
-                if let album = engine.currentTrack?.album, !album.isEmpty {
-                    Text(album)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary.opacity(0.8))
+
+                // Tap artist to open the album in the library.
+                Button { engine.openCurrentAlbum() } label: {
+                    Text(engine.currentTrack?.artist ?? "Unknown Artist")
+                        .font(.body)
+                        .foregroundColor(.secondary)
                         .lineLimit(1)
+                }
+                .buttonStyle(.plain)
+
+                if let album = engine.currentTrack?.album, !album.isEmpty {
+                    Button { engine.openCurrentAlbum() } label: {
+                        Text(album)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary.opacity(0.8))
+                            .lineLimit(1)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .layoutPriority(1)
-            
+
             Spacer(minLength: 0)
-            
+
             PlaybackControlsView(engine: engine)
                 .layoutPriority(2)
-            
+
             Spacer(minLength: 0)
-            
+
             VolumeControlView(engine: engine)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 32)
                 .layoutPriority(2)
-            
+
             Spacer(minLength: 0)
-            
+
             HStack(spacing: 24) {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.4)) {
@@ -104,7 +112,7 @@ struct PlayerView: View {
                 .contentTransition(.symbolEffect(.replace))
                 .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.shuffleMode))
                 .accessibilityLabel(engine.shuffleMode ? "Shuffle On" : "Shuffle Off")
-                
+
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.4)) {
                         switch engine.repeatMode {
@@ -132,9 +140,16 @@ struct PlayerView: View {
                 .contentTransition(.symbolEffect(.replace))
                 .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.repeatMode != .off))
                 .accessibilityLabel("Repeat \(engine.repeatMode == .off ? "Off" : (engine.repeatMode == .one ? "One" : "All"))")
-                
+
                 Spacer()
-                
+
+                if let t = engine.currentTrack {
+                    HeartButton(isFavorite: favorites.isFavoriteSong(t)) {
+                        favorites.toggleSong(t)
+                    }
+                    .frame(width: 32, height: 32)
+                }
+
                 Button(action: {
                     withAnimation(.easeInOut) {
                         engine.showLyrics.toggle()
@@ -147,7 +162,7 @@ struct PlayerView: View {
                 }
                 .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.showLyrics))
                 .accessibilityLabel(engine.showLyrics ? "Hide Lyrics" : "Show Lyrics")
-                
+
                 Button(action: {
                     engine.checkAndShowLyricsEditor()
                 }) {
@@ -162,11 +177,10 @@ struct PlayerView: View {
             .padding(.horizontal, 40)
             .padding(.bottom, 12)
             .layoutPriority(2)
-            
+
             Spacer(minLength: 0)
         }
         .safeAreaPadding(.top, 24)
         .safeAreaPadding(.bottom, 16)
     }
 }
-
