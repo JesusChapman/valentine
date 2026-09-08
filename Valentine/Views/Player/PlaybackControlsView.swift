@@ -2,6 +2,11 @@ import SwiftUI
 
 struct PlaybackControlsView: View {
     @ObservedObject var engine: AudioEngine
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var activeControlTint: Color {
+        engine.activeControlTint(for: colorScheme)
+    }
     
     var body: some View {
         HStack(spacing: 24) {
@@ -25,7 +30,11 @@ struct PlaybackControlsView: View {
                     .foregroundColor(.primary)
                     .frame(width: 58, height: 58)
             }
-            .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 29, isActive: engine.isPlaying))
+            .buttonStyle(LiquidGlassButtonStyle(
+                cornerRadius: 29,
+                isActive: engine.isPlaying,
+                activeTint: activeControlTint
+            ))
             .accessibilityLabel(engine.isPlaying ? "Pause" : "Play")
             .keyboardShortcut(.space, modifiers: [])
             

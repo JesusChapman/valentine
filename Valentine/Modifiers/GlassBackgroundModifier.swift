@@ -21,6 +21,7 @@ extension View {
 struct LiquidGlassButtonStyle: ButtonStyle {
     var cornerRadius: CGFloat = DesignConstants.CornerRadius.large
     var isActive: Bool = false
+    var activeTint: Color = .accentColor
     
     @Environment(\.colorScheme) var colorScheme
     @State private var isHovered = false
@@ -33,12 +34,17 @@ struct LiquidGlassButtonStyle: ButtonStyle {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(isActive ? 0.25 : 0))
+                    .fill(activeTint.opacity(isActive ? (colorScheme == .dark ? 0.24 : 0.16) : 0))
                     .blendMode(.overlay)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(isActive ? 0.5 : (isHovered ? 0.3 : 0.1)), lineWidth: isActive ? 1.5 : 1)
+                    .stroke(
+                        isActive
+                            ? activeTint.opacity(colorScheme == .dark ? 0.8 : 0.7)
+                            : Color.primary.opacity(isHovered ? 0.3 : 0.1),
+                        lineWidth: isActive ? 1.5 : 1
+                    )
                     .blendMode(.overlay)
             )
             .scaleEffect(configuration.isPressed ? 0.92 : (isHovered ? 1.08 : 1.0))
@@ -50,6 +56,5 @@ struct LiquidGlassButtonStyle: ButtonStyle {
             }
     }
 }
-
 
 

@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var isPlaylistVisible = true
     @State private var wasWide = true
     @State private var windowSize: CGSize? = nil
+    @AppStorage("isStandbyMode") private var isStandbyMode = false
     
     @AppStorage("lastNormalWidth") private var lastNormalWidth: Double = 900
     @AppStorage("lastNormalHeight") private var lastNormalHeight: Double = 600
@@ -67,6 +68,14 @@ struct ContentView: View {
                         Image(systemName: "sidebar.left")
                     }
                 }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { isStandbyMode = true }) {
+                        Image(systemName: "music.note.tv")
+                    }
+                    .help("Enter Stand By")
+                    .accessibilityLabel("Enter Stand By")
+                }
             }
             .toolbarBackground(.hidden, for: .windowToolbar)
             .onDrop(of: ["public.file-url"], isTargeted: $isTargeted) { providers in
@@ -92,33 +101,12 @@ struct ContentView: View {
     }
     
     private var backgroundLayer: some View {
-        Group {
-            if engine.queue.isEmpty {
-                Color.clear
-            } else if let art = engine.currentTrack?.albumArt {
-                art
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-                    .clipped()
-                    .blur(radius: 80)
-                    .opacity(0.7)
-                    .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 1.5), value: engine.currentTrack?.id)
-            } else {
-                if colorScheme == .dark {
-                    LinearGradient(
-                        colors: [Color(red: 0.2, green: 0.1, blue: 0.15), Color(red: 0.1, green: 0.1, blue: 0.1)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .ignoresSafeArea()
-                } else {
-                    Color(NSColor.windowBackgroundColor)
-                        .ignoresSafeArea()
-                }
-            }
-        }
+        AnimatedArtworkBackground(
+            artwork: engine.currentTrack?.albumArt,
+            artworkID: engine.currentTrack?.id,
+            engine: engine
+        )
+        .ignoresSafeArea()
     }
     
     private var emptyStateView: some View {
@@ -247,6 +235,10 @@ struct HoverZoomButton: View {
                 }
         }
         .buttonStyle(.plain)
+        // AppKit makes the first focusable button the initial responder when the
+        // window opens. This view already supplies its own pressed/hover states,
+        // so it does not need the system focus halo.
+        .focusEffectDisabled()
     }
 }
 

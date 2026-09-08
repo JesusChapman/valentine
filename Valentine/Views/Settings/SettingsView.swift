@@ -64,6 +64,7 @@ struct SettingsView: View {
         }
         .frame(minWidth: 600, idealWidth: 700, minHeight: 400, idealHeight: 500)
         .background(WindowButtonsHider())
+        .background(InitialWindowFocus())
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: { dismiss() }) {
@@ -74,5 +75,4 @@ struct SettingsView: View {
         }
     }
 }
-
 

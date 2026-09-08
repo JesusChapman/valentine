@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlaylistView: View {
     @ObservedObject var engine: AudioEngine
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var searchText = ""
     @State private var isSearchVisible = false
@@ -18,6 +19,10 @@ struct PlaylistView: View {
                 $0.element.artist.localizedCaseInsensitiveContains(searchText)
             }
         }
+    }
+
+    private var activeControlTint: Color {
+        engine.activeControlTint(for: colorScheme)
     }
     
     var body: some View {
@@ -60,6 +65,7 @@ struct PlaylistView: View {
                             .liquidGlass(cornerRadius: DesignConstants.CornerRadius.medium)
                     )
                     .padding(.trailing, 8)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .leading)))
                 }
                 
                 Button(action: {
@@ -70,13 +76,18 @@ struct PlaylistView: View {
                         }
                     }
                 }) {
-                    Image(systemName: "magnifyingglass")
+                    Image(systemName: isSearchVisible ? "xmark" : "magnifyingglass")
                         .font(.system(size: 14))
-                        .foregroundColor(isSearchVisible ? .accentColor : .primary)
+                        .foregroundColor(isSearchVisible ? activeControlTint : .primary)
                         .frame(width: 28, height: 28)
+                        .contentTransition(.symbolEffect(.replace))
                 }
-                .buttonStyle(.plain)
-                .liquidGlass(cornerRadius: DesignConstants.CornerRadius.medium)
+                .buttonStyle(LiquidGlassButtonStyle(
+                    cornerRadius: DesignConstants.CornerRadius.medium,
+                    isActive: isSearchVisible,
+                    activeTint: activeControlTint
+                ))
+                .focusEffectDisabled()
                 .accessibilityLabel(isSearchVisible ? "Close Search" : "Search Playlist")
                 .keyboardShortcut("f", modifiers: .command)
                 .padding(.trailing, 4)
@@ -91,14 +102,21 @@ struct PlaylistView: View {
                 }) {
                     Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
                         .font(.system(size: 14))
-                        .foregroundColor(isSelectionMode ? .accentColor : .primary)
+                        .foregroundColor(isSelectionMode ? activeControlTint : .primary)
                         .frame(width: 28, height: 28)
+                        .contentTransition(.symbolEffect(.replace))
                 }
-                .buttonStyle(.plain)
-                .liquidGlass(cornerRadius: DesignConstants.CornerRadius.medium)
+                .buttonStyle(LiquidGlassButtonStyle(
+                    cornerRadius: DesignConstants.CornerRadius.medium,
+                    isActive: isSelectionMode,
+                    activeTint: activeControlTint
+                ))
+                .focusEffectDisabled()
                 .accessibilityLabel(isSelectionMode ? "Exit Selection Mode" : "Select Tracks")
             }
             .padding()
+            .animation(.spring(response: 0.35, dampingFraction: 0.78), value: isSearchVisible)
+            .animation(.spring(response: 0.35, dampingFraction: 0.78), value: isSelectionMode)
             
             if isSelectionMode && !selectedTracks.isEmpty {
                 Button(action: {
@@ -148,7 +166,8 @@ struct PlaylistView: View {
                                 track: track,
                                 isPlaying: engine.currentTrackIndex == index,
                                 isSelectionMode: isSelectionMode,
-                                isSelected: selectedTracks.contains(track.id)
+                                isSelected: selectedTracks.contains(track.id),
+                                activeTint: activeControlTint
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {

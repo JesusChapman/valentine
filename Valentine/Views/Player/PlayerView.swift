@@ -2,9 +2,14 @@ import SwiftUI
 
 struct PlayerView: View {
     @ObservedObject var engine: AudioEngine
+    @Environment(\.colorScheme) private var colorScheme
     var togglePlaylist: () -> Void
     var isPlaylistVisible: Bool
     var showToggle: Bool
+
+    private var activeControlTint: Color {
+        engine.activeControlTint(for: colorScheme)
+    }
     
     var body: some View {
         VStack(spacing: 8) {
@@ -102,7 +107,11 @@ struct PlayerView: View {
                         .frame(width: 32, height: 32)
                 }
                 .contentTransition(.symbolEffect(.replace))
-                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.shuffleMode))
+                .buttonStyle(LiquidGlassButtonStyle(
+                    cornerRadius: 16,
+                    isActive: engine.shuffleMode,
+                    activeTint: activeControlTint
+                ))
                 .accessibilityLabel(engine.shuffleMode ? "Shuffle On" : "Shuffle Off")
                 
                 Button(action: {
@@ -130,7 +139,11 @@ struct PlayerView: View {
                     .frame(width: 32, height: 32)
                 }
                 .contentTransition(.symbolEffect(.replace))
-                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.repeatMode != .off))
+                .buttonStyle(LiquidGlassButtonStyle(
+                    cornerRadius: 16,
+                    isActive: engine.repeatMode != .off,
+                    activeTint: activeControlTint
+                ))
                 .accessibilityLabel("Repeat \(engine.repeatMode == .off ? "Off" : (engine.repeatMode == .one ? "One" : "All"))")
                 
                 Spacer()
@@ -145,7 +158,11 @@ struct PlayerView: View {
                         .foregroundColor(.primary)
                         .frame(width: 32, height: 32)
                 }
-                .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.showLyrics))
+                .buttonStyle(LiquidGlassButtonStyle(
+                    cornerRadius: 16,
+                    isActive: engine.showLyrics,
+                    activeTint: activeControlTint
+                ))
                 .accessibilityLabel(engine.showLyrics ? "Hide Lyrics" : "Show Lyrics")
                 
                 Button(action: {
@@ -169,4 +186,3 @@ struct PlayerView: View {
         .safeAreaPadding(.bottom, 16)
     }
 }
-

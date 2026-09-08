@@ -5,12 +5,13 @@ struct QueueRowView: View {
     let isPlaying: Bool
     let isSelectionMode: Bool
     let isSelected: Bool
+    let activeTint: Color
     
     var body: some View {
         HStack(spacing: 12) {
             if isSelectionMode {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
+                    .foregroundColor(isSelected ? activeTint : .secondary)
             }
             
             if let albumArt = track.albumArt {
@@ -54,7 +55,7 @@ struct QueueRowView: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isPlaying && !isSelectionMode ? Color.primary.opacity(0.15) : (isSelected ? Color.blue.opacity(0.2) : Color.clear))
+                .fill(isPlaying && !isSelectionMode ? Color.primary.opacity(0.15) : (isSelected ? activeTint.opacity(0.2) : Color.clear))
         )
         .animation(.easeInOut(duration: 0.2), value: isPlaying)
         .animation(.easeInOut(duration: 0.2), value: isSelectionMode)

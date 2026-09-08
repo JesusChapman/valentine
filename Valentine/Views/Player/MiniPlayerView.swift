@@ -3,9 +3,29 @@ import SwiftUI
 struct MiniPlayerView: View {
     @ObservedObject var engine: AudioEngine
     @State private var showMiniLyrics = false
-    @AppStorage("miniPlayerGlassMode") private var miniPlayerGlassMode = 0
+    @ObservedObject private var settings = AppSettings.shared
     @Environment(\.colorScheme) var colorScheme
     @ObservedObject var appearance = LyricsAppearanceManager.shared
+
+    private var activeControlTint: Color {
+        engine.activeControlTint(for: colorScheme)
+    }
+
+    private func neonColor(isDark: Bool) -> Color {
+        if appearance.usesAlbumColorForNeon,
+           let albumColor = engine.dominantArtworkColor(for: colorScheme) {
+            return albumColor
+        }
+        return appearance.getNeonColor(isDark: isDark)
+    }
+
+    private func glowColor(isDark: Bool) -> Color {
+        if appearance.usesAlbumColorForGlow,
+           let albumColor = engine.dominantArtworkColor(for: colorScheme) {
+            return albumColor
+        }
+        return appearance.getGlowColor(isDark: isDark)
+    }
     
     private var activeLyricLines: (current: String?, next: String?) {
         guard let lyrics = engine.currentTrack?.lyrics else { return (nil, nil) }
@@ -80,7 +100,11 @@ struct MiniPlayerView: View {
                                     .foregroundColor(.primary)
                                     .frame(width: 32, height: 32)
                             }
-                            .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 16, isActive: engine.isPlaying))
+                            .buttonStyle(LiquidGlassButtonStyle(
+                                cornerRadius: 16,
+                                isActive: engine.isPlaying,
+                                activeTint: activeControlTint
+                            ))
                             
                             Button(action: { engine.nextTrack() }) {
                                 Image(systemName: "forward.fill")
@@ -100,7 +124,11 @@ struct MiniPlayerView: View {
                                     .foregroundColor(.primary)
                                     .frame(width: 24, height: 24)
                             }
-                            .buttonStyle(LiquidGlassButtonStyle(cornerRadius: 12, isActive: showMiniLyrics))
+                            .buttonStyle(LiquidGlassButtonStyle(
+                                cornerRadius: 12,
+                                isActive: showMiniLyrics,
+                                activeTint: activeControlTint
+                            ))
                         }
                     }
                     
@@ -142,14 +170,14 @@ struct MiniPlayerView: View {
                         let isDark = colorScheme == .dark
                         Text(lines.current ?? "♪")
                             .font(.system(size: 18, weight: .bold, design: appearance.getFontDesign(isDark: isDark)))
-                            .foregroundColor(engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark) : appearance.getFontColor(isDark: isDark, isActive: true))
+                            .foregroundColor(settings.isNeonEffectEnabled ? neonColor(isDark: isDark) : appearance.getFontColor(isDark: isDark, isActive: true))
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.8)
-                            .shadow(color: engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark).opacity(0.8) : .clear, radius: 6, x: 0, y: 0)
-                            .shadow(color: engine.isNeonEffectEnabled ? appearance.getNeonColor(isDark: isDark).opacity(0.4) : .clear, radius: 12, x: 0, y: 0)
-                            .shadow(color: engine.isGlowEffectEnabled ? appearance.getGlowColor(isDark: isDark).opacity(0.6) : .clear, radius: 8, x: 0, y: 0)
-                            .id("current_" + (lines.current ?? ""))
+                            .shadow(color: settings.isNeonEffectEnabled ? neonColor(isDark: isDark).opacity(0.8) : .clear, radius: 6, x: 0, y: 0)
+                            .shadow(color: settings.isNeonEffectEnabled ? neonColor(isDark: isDark).opacity(0.4) : .clear, radius: 12, x: 0, y: 0)
+                            .shadow(color: settings.isGlowEffectEnabled ? glowColor(isDark: isDark).opacity(0.6) : .clear, radius: 8, x: 0, y: 0)
+                            .id("\(engine.currentTrack?.id.uuidString ?? "none")_current_\(lines.current ?? "")")
                             .transition(.push(from: .bottom))
                         
                         if let next = lines.next {
@@ -159,7 +187,7 @@ struct MiniPlayerView: View {
                                 .multilineTextAlignment(.center)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
-                                .id("next_" + next)
+                                .id("\(engine.currentTrack?.id.uuidString ?? "none")_next_\(next)")
                                 .transition(.push(from: .bottom))
                         }
                     }
@@ -174,7 +202,7 @@ struct MiniPlayerView: View {
         .frame(width: 480, height: showMiniLyrics ? 200 : 140)
         .background(
             ZStack {
-                if miniPlayerGlassMode == 1 {
+                if settings.miniPlayerGlassMode == 1 {
                     Color.clear
                         .glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 } else {

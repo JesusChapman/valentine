@@ -3,6 +3,7 @@ import AVFoundation
 import Combine
 import SwiftUI
 import MediaPlayer
+import AppKit
 
 enum RepeatMode: Int {
     case off = 0
@@ -20,19 +21,10 @@ class AudioEngine: ObservableObject {
     @Published var showLyrics: Bool = false
     @Published var showLyricsEditor: Bool = false
     @Published var showMutagenInstaller: Bool = false
+    @Published private(set) var currentArtworkColor: NSColor?
     
     @Published var repeatMode: RepeatMode = .off
     @Published var shuffleMode: Bool = false
-    @Published var isGlowEffectEnabled: Bool = false {
-        didSet {
-            UserDefaults.standard.set(isGlowEffectEnabled, forKey: "isGlowEffectEnabled")
-        }
-    }
-    @Published var isNeonEffectEnabled: Bool = false {
-        didSet {
-            UserDefaults.standard.set(isNeonEffectEnabled, forKey: "isNeonEffectEnabled")
-        }
-    }
     @Published var volume: Float = 1.0 {
         didSet {
             player?.volume = volume
@@ -40,6 +32,38 @@ class AudioEngine: ObservableObject {
     }
     
     @Published var waveformPoints: [Float] = []
+    private var musicEnvelope: [Float] = []
+    private var spectrumFrames: [[Float]] = []
+
+    var currentSpectrum: [Float] {
+        let silence = [Float](repeating: 0, count: SpectrumAnalyzer.bandCount)
+        guard isPlaying, let seconds = player?.currentTime().seconds,
+              seconds.isFinite, seconds >= 0 else { return silence }
+        // FFT windows describe their centers, not their leading edges.
+        let position = max(0, seconds / envelopeStep - 0.5)
+        guard position < Double(spectrumFrames.count) else { return silence }
+        let index = Int(position)
+        let next = min(index + 1, spectrumFrames.count - 1)
+        let fraction = Float(position - Double(index))
+        return zip(spectrumFrames[index], spectrumFrames[next]).map { $0 * (1 - fraction) + $1 * fraction }
+    }
+    private var envelopeStep: Double = 0.02
+    private var waveformTask: Task<Void, Never>?
+    private var analysisGeneration = UUID()
+
+    /// Sample the decoded energy envelope at the player's actual position,
+    /// rather than the less frequent UI time observer (also handles seeking).
+    var backgroundPulse: Float {
+        guard isPlaying, !musicEnvelope.isEmpty,
+              let seconds = player?.currentTime().seconds,
+              seconds.isFinite, seconds >= 0 else { return 0 }
+        let position = seconds / envelopeStep
+        guard position < Double(musicEnvelope.count) else { return 0 }
+        let index = Int(position)
+        let next = min(index + 1, musicEnvelope.count - 1)
+        let fraction = Float(position - Double(index))
+        return musicEnvelope[index] * (1 - fraction) + musicEnvelope[next] * fraction
+    }
     
     private var player: AVPlayer?
     private var timeObserver: Any?
@@ -53,25 +77,50 @@ class AudioEngine: ObservableObject {
         guard let index = currentTrackIndex, queue.indices.contains(index) else { return nil }
         return queue[index]
     }
+
+    /// Exposes the active player read-only so AVKit can present the native
+    /// AirPlay route picker without allowing views to control playback state.
+    var routePickerPlayer: AVPlayer? {
+        player
+    }
+
+    /// Preserves the artwork's hue, but adjusts its brightness so it remains
+    /// legible on the dynamic background in either system appearance.
+    func dominantArtworkColor(for colorScheme: ColorScheme) -> Color? {
+        guard let artworkColor = currentArtworkColor,
+              let sRGBColor = artworkColor.usingColorSpace(.sRGB) else {
+            return nil
+        }
+
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+        sRGBColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+
+        let adjustedBrightness = colorScheme == .dark
+            ? min(max(brightness, 0.65), 0.92)
+            : min(max(brightness, 0.28), 0.50)
+        return Color(
+            hue: Double(hue),
+            saturation: Double(max(saturation, 0.55)),
+            brightness: Double(adjustedBrightness),
+            opacity: Double(alpha)
+        )
+    }
+
+    func activeControlTint(for colorScheme: ColorScheme) -> Color {
+        dominantArtworkColor(for: colorScheme) ?? .accentColor
+    }
     
     init() {
-        self.isGlowEffectEnabled = UserDefaults.standard.bool(forKey: "isGlowEffectEnabled")
-        self.isNeonEffectEnabled = UserDefaults.standard.bool(forKey: "isNeonEffectEnabled")
         setupAudioSession()
         setupRemoteCommandCenter()
         
-        self.userDefaultsObserver = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in
-                guard let self = self else { return }
-                let newGlow = UserDefaults.standard.bool(forKey: "isGlowEffectEnabled")
-                let newNeon = UserDefaults.standard.bool(forKey: "isNeonEffectEnabled")
-                if self.isGlowEffectEnabled != newGlow { self.isGlowEffectEnabled = newGlow }
-                if self.isNeonEffectEnabled != newNeon { self.isNeonEffectEnabled = newNeon }
-            }
-        }
     }
     
     deinit {
+        waveformTask?.cancel()
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
         }
@@ -183,6 +232,7 @@ class AudioEngine: ObservableObject {
         self.isPlaying = false
         self.currentTime = 0
         self.duration = 0
+        self.currentArtworkColor = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
     
@@ -238,15 +288,19 @@ class AudioEngine: ObservableObject {
         let playerItem = AVPlayerItem(url: track.url)
         
         endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.nextTrack(isAutomatic: true)
             }
         }
         
         player = AVPlayer(playerItem: playerItem)
+        player?.allowsExternalPlayback = true
         player?.volume = volume
+        currentTime = 0
+        waveformPoints = []
         currentTrackIndex = index
         duration = track.duration
+        currentArtworkColor = track.nsImage?.dominantArtworkColor()
         
         hasScrobbledCurrentTrack = false
         currentTrackStartTime = Int(Date().timeIntervalSince1970)
@@ -254,8 +308,8 @@ class AudioEngine: ObservableObject {
         
         let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            Task { @MainActor in
-                guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.currentTime = time.seconds
                 
                 if let currentTrack = self.currentTrack, self.duration > 30 && !self.hasScrobbledCurrentTrack {
@@ -381,48 +435,81 @@ class AudioEngine: ObservableObject {
     }
     
     private func generateWaveform(for url: URL) {
-        Task.detached {
+        waveformTask?.cancel()
+        musicEnvelope = []
+        spectrumFrames = []
+        let generation = UUID()
+        analysisGeneration = generation
+        waveformTask = Task.detached(priority: .utility) { [weak self] in
             do {
                 let file = try AVAudioFile(forReading: url)
                 let format = file.processingFormat
-                let frameCount = AVAudioFrameCount(file.length)
-                
-                guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
-                try file.read(into: buffer)
-                
-                guard let floatChannelData = buffer.floatChannelData else { return }
-                
+                guard format.sampleRate > 0, file.length > 0 else { return }
+                // Decode in 20 ms blocks, avoiding a whole-song PCM allocation.
+                let capacity = AVAudioFrameCount(max(1, format.sampleRate * 0.02))
+                guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { return }
                 let channelCount = Int(format.channelCount)
-                let length = Int(buffer.frameLength)
-                
-                let targetSamples = 100
-                let samplesPerPoint = max(1, length / targetSamples)
-                
-                var points: [Float] = []
-                
-                for i in 0..<targetSamples {
-                    let startIdx = i * samplesPerPoint
-                    let endIdx = min(startIdx + samplesPerPoint, length)
-                    var maxAmplitude: Float = 0
-                    
-                    for j in startIdx..<endIdx {
+                let analyzer = SpectrumAnalyzer(sampleRate: format.sampleRate, blockSize: Int(capacity))
+                var spectra: [[Float]] = []
+                var publishedSpectra = 0
+                let analysisStep = Double(capacity) / format.sampleRate
+                var points = [Float](repeating: 0, count: 100)
+                var envelope: [Float] = []
+                while file.framePosition < file.length {
+                    try Task.checkCancellation()
+                    let offset = file.framePosition
+                    try file.read(into: buffer, frameCount: capacity)
+                    let length = Int(buffer.frameLength)
+                    guard length > 0, let samples = buffer.floatChannelData else { break }
+                    var squareSum: Double = 0
+                    for j in 0..<length {
+                        let bin = min(99, Int((offset + Int64(j)) * 100 / file.length))
                         for channel in 0..<channelCount {
-                            let value = abs(floatChannelData[channel][j])
-                            if value > maxAmplitude {
-                                maxAmplitude = value
-                            }
+                            let value = samples[channel][j]
+                            guard value.isFinite else { continue }
+                            points[bin] = max(points[bin], abs(value))
+                            squareSum += Double(value) * Double(value)
                         }
                     }
-                    points.append(maxAmplitude)
+                    envelope.append(Float(sqrt(squareSum / Double(max(1, length * channelCount)))))
+                    spectra.append(analyzer?.analyze(channels: samples, count: channelCount, frames: length)
+                        ?? [Float](repeating: 0, count: SpectrumAnalyzer.bandCount))
+                    // Start reacting after the first second is decoded, not after the whole song.
+                    // Subsequent batches amortize actor hops; generation guards reject stale tracks.
+                    if spectra.count == 50 || spectra.count.isMultiple(of: 500) {
+                        let chunk = Array(spectra[publishedSpectra...])
+                        publishedSpectra = spectra.count
+                        await MainActor.run { [weak self] in
+                            guard let self, self.analysisGeneration == generation,
+                                  self.currentTrack?.url == url else { return }
+                            self.spectrumFrames.append(contentsOf: chunk)
+                            self.envelopeStep = analysisStep
+                        }
+                    }
                 }
-                
-                let overallMax = points.max() ?? 1.0
+                let overallMax = max(points.max() ?? 0, 0.000_001)
                 let normalized = points.map { $0 / overallMax }
-                
-                await MainActor.run {
-                    self.waveformPoints = normalized
+                let energyMax = max(envelope.max() ?? 0, 0.000_001)
+                var smoothed: Float = 0
+                for index in envelope.indices {
+                    let target = envelope[index] / energyMax
+                    // Fast attack and slower release produce a gentle pulse.
+                    smoothed += (target - smoothed) * (target > smoothed ? 0.55 : 0.16)
+                    envelope[index] = smoothed
                 }
-                
+                let completedEnvelope = envelope
+                let completedSpectra = spectra
+                let step = Double(capacity) / format.sampleRate
+                await MainActor.run { [weak self] in
+                    guard let self, self.analysisGeneration == generation,
+                          self.currentTrack?.url == url else { return }
+                    self.waveformPoints = normalized
+                    self.musicEnvelope = completedEnvelope
+                    self.spectrumFrames = completedSpectra
+                    self.envelopeStep = step
+                }
+            } catch is CancellationError {
+                // A newer track owns the background now.
             } catch {
                 print("Error generating waveform: \(error)")
             }

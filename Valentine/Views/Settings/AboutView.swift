@@ -165,6 +165,7 @@ struct AboutView: View {
         }
         .frame(width: 650, height: 480)
         .background(WindowAccessor())
+        .background(InitialWindowFocus())
         .background(Material.ultraThin)
         .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
     }

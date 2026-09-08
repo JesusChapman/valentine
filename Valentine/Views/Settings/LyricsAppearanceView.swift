@@ -2,10 +2,9 @@ import SwiftUI
 
 struct LyricsAppearanceView: View {
     @ObservedObject var settings = LyricsAppearanceManager.shared
+    @ObservedObject private var appSettings = AppSettings.shared
     
     @State private var previewIsDark = true
-    @State private var previewNeon = false
-    @State private var previewGlow = false
     @State private var applyMode = 0 // 0: Both Themes, 1: Specific Theme
     
     // Bindings for the currently selected theme to edit
@@ -68,9 +67,9 @@ struct LyricsAppearanceView: View {
                         .fill(previewIsDark ? Color(white: 0.1) : Color(white: 0.95))
                     
                     VStack(spacing: 16) {
-                        previewText("Lorem ipsum dolor sit amet", isActive: false)
-                        previewText("Consectetur adipiscing elit", isActive: true)
-                        previewText("Sed do eiusmod tempor", isActive: false)
+                        previewText("Lorem ipsum dolor sit amet", index: 0)
+                        previewText("Consectetur adipiscing elit", index: 1)
+                        previewText("Sed do eiusmod tempor", index: 2)
                     }
                 }
                 .frame(height: 180)
@@ -91,9 +90,9 @@ struct LyricsAppearanceView: View {
                     .pickerStyle(SegmentedPickerStyle())
                     
                     HStack {
-                        Toggle("Neon Effect", isOn: $previewNeon)
+                        Toggle("Neon Effect", isOn: $appSettings.isNeonEffectEnabled)
                         Spacer()
-                        Toggle("Glow Effect", isOn: $previewGlow)
+                        Toggle("Glow Effect", isOn: $appSettings.isGlowEffectEnabled)
                     }
                     
                     VStack(alignment: .leading, spacing: 12) {
@@ -108,6 +107,19 @@ struct LyricsAppearanceView: View {
                             Text("Serif").tag(3)
                         }
                     }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Lyrics Transition")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        Picker("Lyrics Transition", selection: $settings.lyricsTransitionStyle) {
+                            ForEach(LyricsTransitionStyle.allCases) { style in
+                                Text(LocalizedStringKey(style.title)).tag(style.rawValue)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
                     
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Colors")
@@ -115,12 +127,24 @@ struct LyricsAppearanceView: View {
                             .fontWeight(.semibold)
                         
                         ColorPicker("Font Color", selection: colorBinding(for: $settings.fontColorLight, stringBindingDark: $settings.fontColorDark, defaultColor: .primary))
-                        ColorPicker("Neon Color", selection: colorBinding(for: $settings.neonColorLight, stringBindingDark: $settings.neonColorDark, defaultColor: .white))
-                        ColorPicker("Glow Color", selection: colorBinding(for: $settings.glowColorLight, stringBindingDark: $settings.glowColorDark, defaultColor: .accentColor))
+                        VStack(alignment: .leading, spacing: 6) {
+                            ColorPicker("Neon Color", selection: colorBinding(for: $settings.neonColorLight, stringBindingDark: $settings.neonColorDark, defaultColor: .white))
+                            Toggle("Use Primary Color of Playing Album", isOn: $settings.usesAlbumColorForNeon)
+                                .font(.caption)
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            ColorPicker("Glow Color", selection: colorBinding(for: $settings.glowColorLight, stringBindingDark: $settings.glowColorDark, defaultColor: .accentColor))
+                            Toggle("Use Primary Color of Playing Album", isOn: $settings.usesAlbumColorForGlow)
+                                .font(.caption)
+                        }
                     }
                     
                     Button("Reset to Defaults") {
                         settings.resetToDefaults()
+                        appSettings.isNeonEffectEnabled = false
+                        appSettings.isGlowEffectEnabled = false
+                        applyMode = 0
                     }
                     .padding(.top, 10)
                 }
@@ -129,13 +153,27 @@ struct LyricsAppearanceView: View {
         }
     }
     
-    private func previewText(_ text: String, isActive: Bool) -> some View {
-        Text(text)
+    private func previewText(_ text: String, index: Int) -> some View {
+        let transition = settings.transitionStyle
+        let isActive = index == 1
+        let offset: CGFloat
+        if transition == .slide {
+            offset = isActive ? 0 : (index < 1 ? -transition.inactiveOffset : transition.inactiveOffset)
+        } else {
+            offset = isActive ? (transition == .bounce ? -6 : 0) : transition.inactiveOffset
+        }
+
+        return Text(text)
             .font(.system(size: isActive ? 24 : 18, weight: isActive ? .bold : .medium, design: settings.getFontDesign(isDark: previewIsDark)))
-            .foregroundColor((previewNeon && isActive) ? settings.getNeonColor(isDark: previewIsDark) : settings.getFontColor(isDark: previewIsDark, isActive: isActive))
-            .shadow(color: (previewNeon && isActive) ? settings.getNeonColor(isDark: previewIsDark).opacity(0.8) : .clear, radius: 10, x: 0, y: 0)
-            .shadow(color: (previewNeon && isActive) ? settings.getNeonColor(isDark: previewIsDark).opacity(0.4) : .clear, radius: 20, x: 0, y: 0)
-            .shadow(color: (previewGlow && isActive) ? settings.getGlowColor(isDark: previewIsDark).opacity(0.8) : .clear, radius: 15, x: 0, y: 0)
-            .shadow(color: (previewGlow && isActive) ? settings.getGlowColor(isDark: previewIsDark).opacity(0.5) : .clear, radius: 5, x: 0, y: 0)
+            .foregroundColor((appSettings.isNeonEffectEnabled && isActive) ? settings.getNeonColor(isDark: previewIsDark) : settings.getFontColor(isDark: previewIsDark, isActive: isActive))
+            .shadow(color: (appSettings.isNeonEffectEnabled && isActive) ? settings.getNeonColor(isDark: previewIsDark).opacity(0.8) : .clear, radius: 10, x: 0, y: 0)
+            .shadow(color: (appSettings.isNeonEffectEnabled && isActive) ? settings.getNeonColor(isDark: previewIsDark).opacity(0.4) : .clear, radius: 20, x: 0, y: 0)
+            .shadow(color: (appSettings.isGlowEffectEnabled && isActive) ? settings.getGlowColor(isDark: previewIsDark).opacity(0.8) : .clear, radius: 15, x: 0, y: 0)
+            .shadow(color: (appSettings.isGlowEffectEnabled && isActive) ? settings.getGlowColor(isDark: previewIsDark).opacity(0.5) : .clear, radius: 5, x: 0, y: 0)
+            .opacity(isActive ? 1 : transition.inactiveOpacity)
+            .scaleEffect(isActive ? transition.activeScale : transition.inactiveScale)
+            .offset(y: offset)
+            .blur(radius: isActive ? 0 : transition.inactiveBlur)
+            .animation(transition.animation, value: settings.lyricsTransitionStyle)
     }
 }

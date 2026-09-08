@@ -1,3 +1,9 @@
 
 # Local Configuration Files
 Valentine/Config/Secrets.swift
+
+# Generated release artifacts
+dist/
+
+# OS metadata
+.DS_Store

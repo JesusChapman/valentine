@@ -16,7 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct ValentineApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @AppStorage("appTheme") private var appTheme = 0
+    @ObservedObject private var settings = AppSettings.shared
     
     var body: some Scene {
         WindowGroup {
@@ -37,7 +37,7 @@ struct ValentineApp: App {
         
         Window("Settings", id: "settings") {
             SettingsView()
-                .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
+                .preferredColorScheme(settings.appTheme == 1 ? .light : (settings.appTheme == 2 ? .dark : nil))
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
@@ -47,31 +47,76 @@ struct ValentineApp: App {
 struct RootView: View {
     @StateObject private var engine = AudioEngine()
     @AppStorage("isMiniPlayerMode") private var isMiniPlayerMode = false
-    @AppStorage("appTheme") private var appTheme = 0
+    @AppStorage("isStandbyMode") private var isStandbyMode = false
+    @ObservedObject private var settings = AppSettings.shared
+    @State private var windowChromeRevision = 0
     
     @AppStorage("lastNormalWidth") private var lastNormalWidth: Double = 900
     @AppStorage("lastNormalHeight") private var lastNormalHeight: Double = 600
     
     var body: some View {
         Group {
-            if isMiniPlayerMode {
+            if isStandbyMode {
+                StandbyView(engine: engine, isStandbyMode: $isStandbyMode)
+            } else if isMiniPlayerMode {
                 MiniPlayerView(engine: engine)
             } else {
                 ContentView()
                     .environmentObject(engine)
+                    .id(windowChromeRevision)
             }
         }
         .animation(.easeInOut, value: isMiniPlayerMode)
-        .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
+        .animation(.easeInOut, value: isStandbyMode)
+        .preferredColorScheme(settings.appTheme == 1 ? .light : (settings.appTheme == 2 ? .dark : nil))
         .onAppear {
-            updateTheme(theme: appTheme)
-            configureWindow(forMiniPlayer: isMiniPlayerMode)
+            updateTheme(theme: settings.appTheme)
+            configureWindow(forMiniPlayer: isMiniPlayerMode, isStandbyMode: isStandbyMode)
         }
-        .onChange(of: appTheme) { _, newTheme in
+        .onChange(of: settings.appTheme) { _, newTheme in
             updateTheme(theme: newTheme)
         }
         .onChange(of: isMiniPlayerMode) { _, newValue in
-            configureWindow(forMiniPlayer: newValue)
+            if newValue && isStandbyMode {
+                isStandbyMode = false
+            }
+            configureWindow(forMiniPlayer: newValue, isStandbyMode: false)
+
+            if !newValue && !isStandbyMode {
+                DispatchQueue.main.async {
+                    windowChromeRevision &+= 1
+                }
+            }
+        }
+        .onChange(of: isStandbyMode) { oldValue, newValue in
+            if newValue && isMiniPlayerMode {
+                isMiniPlayerMode = false
+            }
+            if oldValue && !newValue {
+                exitStandbyFullscreen()
+            } else {
+                configureWindow(forMiniPlayer: false, isStandbyMode: newValue)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { notification in
+            // A fullscreen window ignores frame changes while its exit animation
+            // is running. Apply the pending player mode once AppKit confirms that
+            // the transition has finished.
+            guard let window = notification.object as? NSWindow else { return }
+            let id = window.identifier?.rawValue ?? ""
+            guard !id.contains("settings"), !id.contains("about") else { return }
+
+            configureWindow(
+                forMiniPlayer: isMiniPlayerMode,
+                isStandbyMode: isStandbyMode
+            )
+
+            // configureWindow is queued on the main actor and restores the
+            // traffic-light buttons first. Rebuild the SwiftUI toolbar on the
+            // following pass, once those controls occupy their normal space.
+            DispatchQueue.main.async {
+                windowChromeRevision &+= 1
+            }
         }
         .sheet(isPresented: $engine.showLyricsEditor) {
             LyricsEditorView()
@@ -103,7 +148,7 @@ struct RootView: View {
         #endif
     }
     
-    private func configureWindow(forMiniPlayer: Bool) {
+    private func configureWindow(forMiniPlayer: Bool, isStandbyMode: Bool) {
         #if os(macOS)
         DispatchQueue.main.async {
             for window in NSApplication.shared.windows {
@@ -112,10 +157,25 @@ struct RootView: View {
                     if id.contains("settings") || id.contains("about") { continue }
                     
                     window.level = forMiniPlayer ? .floating : .normal
-                    window.standardWindowButton(.closeButton)?.isHidden = forMiniPlayer
-                    window.standardWindowButton(.miniaturizeButton)?.isHidden = forMiniPlayer
-                    window.standardWindowButton(.zoomButton)?.isHidden = forMiniPlayer
+                    window.standardWindowButton(.closeButton)?.isHidden = forMiniPlayer || isStandbyMode
+                    window.standardWindowButton(.miniaturizeButton)?.isHidden = forMiniPlayer || isStandbyMode
+                    window.standardWindowButton(.zoomButton)?.isHidden = forMiniPlayer || isStandbyMode
                     window.isMovableByWindowBackground = true
+
+                    if isStandbyMode {
+                        window.level = .normal
+                        if !window.styleMask.contains(.fullScreen) {
+                            window.toggleFullScreen(nil)
+                        }
+                        continue
+                    }
+
+                    // Defer normal/mini-player sizing until
+                    // NSWindow.didExitFullScreenNotification. Calling setFrame
+                    // during the fullscreen transition is silently discarded.
+                    if window.styleMask.contains(.fullScreen) {
+                        continue
+                    }
                     
                     if forMiniPlayer {
                         window.backgroundColor = .clear
@@ -140,8 +200,32 @@ struct RootView: View {
                         newFrame.size = NSSize(width: targetWidth, height: targetHeight)
                         newFrame.origin.y -= (targetHeight - oldHeight)
                         window.setFrame(newFrame, display: true, animate: true)
+
+                        DispatchQueue.main.async {
+                            window.toolbar?.validateVisibleItems()
+                            window.contentView?.superview?.needsLayout = true
+                            window.contentView?.superview?.layoutSubtreeIfNeeded()
+                            NSApplication.shared.setWindowsNeedUpdate(true)
+                        }
                     }
                 }
+            }
+        }
+        #endif
+    }
+
+    private func exitStandbyFullscreen() {
+        #if os(macOS)
+        DispatchQueue.main.async {
+            for window in NSApplication.shared.windows {
+                let id = window.identifier?.rawValue ?? ""
+                guard (window.className == "NSWindow" || window.className.contains("SwiftUI")),
+                      !id.contains("settings"),
+                      !id.contains("about"),
+                      window.styleMask.contains(.fullScreen) else {
+                    continue
+                }
+                window.toggleFullScreen(nil)
             }
         }
         #endif
@@ -150,6 +234,7 @@ struct RootView: View {
 
 struct ValentineCommands: Commands {
     @AppStorage("isMiniPlayerMode") private var isMiniPlayerMode = false
+    @AppStorage("isStandbyMode") private var isStandbyMode = false
     @Environment(\.openWindow) var openWindow
 
     var body: some Commands {
@@ -205,6 +290,13 @@ struct ValentineCommands: Commands {
         
 
         CommandGroup(after: .windowList) {
+            Button(action: {
+                isStandbyMode.toggle()
+            }) {
+                Label(isStandbyMode ? "Exit Stand By" : "Enter Stand By", systemImage: "music.note.tv")
+            }
+            .keyboardShortcut("s", modifiers: [.command, .option])
+
             Button(action: { isMiniPlayerMode.toggle() }) {
                 Label(isMiniPlayerMode ? "Switch to Full Player" : "Switch to Mini-Player", systemImage: isMiniPlayerMode ? "arrow.up.left.and.arrow.down.right" : "pip.enter")
             }
