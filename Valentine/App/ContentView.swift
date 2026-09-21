@@ -149,28 +149,16 @@ struct ContentView: View {
             
             VStack(spacing: 12) {
                 HoverZoomButton(title: "Add Folder...", isPrimary: true) {
-                    selectFiles(directories: true)
+                    engine.showAddFolderDialog()
                 }
                 
                 HoverZoomButton(title: "Add File...", isPrimary: false) {
-                    selectFiles(directories: false)
+                    engine.showAddFileDialog()
                 }
             }
             .padding(.top, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-    
-    private func selectFiles(directories: Bool) {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = directories
-        panel.canChooseFiles = !directories
-        panel.allowedContentTypes = [.audio]
-        
-        if panel.runModal() == .OK {
-            engine.addTracks(panel.urls)
-        }
     }
     
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
