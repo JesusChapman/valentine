@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Main Player" : {
+      "extractionState": "manual",
+      "localizations": {
+        "es": { "stringUnit": { "state": "translated", "value": "Reproductor principal" } },
+        "hi": { "stringUnit": { "state": "translated", "value": "मुख्य प्लेयर" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "メインプレーヤー" } },
+        "pt-BR": { "stringUnit": { "state": "translated", "value": "Reprodutor principal" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "主播放器" } }
+      }
+    },
     "Stand By" : {
       "extractionState": "manual",
       "localizations": {

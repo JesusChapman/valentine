@@ -33,6 +33,12 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Section(header: Text("Main Player")) {
+                Toggle("Replace Artwork with Audio Ring", isOn: $settings.mainPlayerAudioRing)
+                Text("Show a luminous ring that moves with the music instead of the album artwork.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section(header: Text("Stand By")) {
                 Toggle("Replace Artwork with Audio Ring", isOn: $settings.standbyAudioRing)
                 Text("Show a luminous ring that moves with the music instead of the album artwork.")

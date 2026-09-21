@@ -87,6 +87,7 @@ struct StandbyView: View {
         }
         .ignoresSafeArea()
         .background(StandbyCursorAutoHide())
+        .background(StandbyDisplayAwake())
         .onChange(of: engine.showLyrics) { _, showLyrics in
             selectedPane = showLyrics ? .lyrics : .queue
         }

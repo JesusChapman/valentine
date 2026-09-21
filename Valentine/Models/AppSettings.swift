@@ -5,6 +5,9 @@ import Foundation
 @MainActor
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
+    @Published var mainPlayerAudioRing: Bool {
+        didSet { UserDefaults.standard.set(mainPlayerAudioRing, forKey: "mainPlayerAudioRing") }
+    }
     @Published var standbyAudioRing: Bool {
         didSet { UserDefaults.standard.set(standbyAudioRing, forKey: "standbyAudioRing") }
     }
@@ -33,6 +36,7 @@ final class AppSettings: ObservableObject {
     }
 
     private init(defaults: UserDefaults = .standard) {
+        mainPlayerAudioRing = defaults.bool(forKey: "mainPlayerAudioRing")
         standbyAudioRing = defaults.bool(forKey: "standbyAudioRing")
         musicReactiveBackground = defaults.bool(forKey: "musicReactiveBackground")
         appTheme = defaults.integer(forKey: Keys.appTheme)

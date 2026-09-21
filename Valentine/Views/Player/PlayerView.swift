@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlayerView: View {
     @ObservedObject var engine: AudioEngine
+    @ObservedObject private var settings = AppSettings.shared
     @Environment(\.colorScheme) private var colorScheme
     var togglePlaylist: () -> Void
     var isPlaylistVisible: Bool
@@ -19,6 +20,11 @@ struct PlayerView: View {
                 if engine.showLyrics {
                     LyricsView(engine: engine)
                         .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 325)
+                        .layoutPriority(1)
+                } else if settings.mainPlayerAudioRing {
+                    StandbyAudioRingView(engine: engine, tintColorScheme: colorScheme)
+                        .aspectRatio(1, contentMode: .fit)
+                        .frame(minWidth: 160, maxWidth: 325, minHeight: 160, maxHeight: 325)
                         .layoutPriority(1)
                 } else if let art = engine.currentTrack?.albumArt {
                     Rectangle()

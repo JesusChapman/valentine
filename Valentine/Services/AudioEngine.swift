@@ -49,6 +49,7 @@ class AudioEngine: ObservableObject {
     }
     private var envelopeStep: Double = 0.02
     private var waveformTask: Task<Void, Never>?
+    private var spectrumTask: Task<Void, Never>?
     private var analysisGeneration = UUID()
 
     /// Sample the decoded energy envelope at the player's actual position,
@@ -121,6 +122,7 @@ class AudioEngine: ObservableObject {
     
     deinit {
         waveformTask?.cancel()
+        spectrumTask?.cancel()
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
         }
@@ -436,11 +438,33 @@ class AudioEngine: ObservableObject {
     
     private func generateWaveform(for url: URL) {
         waveformTask?.cancel()
+        spectrumTask?.cancel()
         musicEnvelope = []
         spectrumFrames = []
         let generation = UUID()
         analysisGeneration = generation
-        waveformTask = Task.detached(priority: .utility) { [weak self] in
+        waveformTask = Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                let points = try await WaveformAnalyzer.analyze(url: url) { [weak self] partial in
+                    await MainActor.run { [weak self] in
+                        guard let self, self.analysisGeneration == generation,
+                              self.currentTrack?.url == url else { return }
+                        self.waveformPoints = partial
+                    }
+                }
+                try Task.checkCancellation()
+                await MainActor.run { [weak self] in
+                    guard let self, self.analysisGeneration == generation,
+                          self.currentTrack?.url == url else { return }
+                    self.waveformPoints = points
+                }
+            } catch is CancellationError {
+                // A newer track owns the overview.
+            } catch {
+                print("Error generating waveform: \(error)")
+            }
+        }
+        spectrumTask = Task.detached(priority: .utility) { [weak self] in
             do {
                 let file = try AVAudioFile(forReading: url)
                 let format = file.processingFormat
@@ -453,21 +477,17 @@ class AudioEngine: ObservableObject {
                 var spectra: [[Float]] = []
                 var publishedSpectra = 0
                 let analysisStep = Double(capacity) / format.sampleRate
-                var points = [Float](repeating: 0, count: 100)
                 var envelope: [Float] = []
                 while file.framePosition < file.length {
                     try Task.checkCancellation()
-                    let offset = file.framePosition
                     try file.read(into: buffer, frameCount: capacity)
                     let length = Int(buffer.frameLength)
                     guard length > 0, let samples = buffer.floatChannelData else { break }
                     var squareSum: Double = 0
                     for j in 0..<length {
-                        let bin = min(99, Int((offset + Int64(j)) * 100 / file.length))
                         for channel in 0..<channelCount {
                             let value = samples[channel][j]
                             guard value.isFinite else { continue }
-                            points[bin] = max(points[bin], abs(value))
                             squareSum += Double(value) * Double(value)
                         }
                     }
@@ -487,8 +507,6 @@ class AudioEngine: ObservableObject {
                         }
                     }
                 }
-                let overallMax = max(points.max() ?? 0, 0.000_001)
-                let normalized = points.map { $0 / overallMax }
                 let energyMax = max(envelope.max() ?? 0, 0.000_001)
                 var smoothed: Float = 0
                 for index in envelope.indices {
@@ -503,7 +521,6 @@ class AudioEngine: ObservableObject {
                 await MainActor.run { [weak self] in
                     guard let self, self.analysisGeneration == generation,
                           self.currentTrack?.url == url else { return }
-                    self.waveformPoints = normalized
                     self.musicEnvelope = completedEnvelope
                     self.spectrumFrames = completedSpectra
                     self.envelopeStep = step
@@ -511,7 +528,7 @@ class AudioEngine: ObservableObject {
             } catch is CancellationError {
                 // A newer track owns the background now.
             } catch {
-                print("Error generating waveform: \(error)")
+                print("Error generating audio spectrum: \(error)")
             }
         }
     }

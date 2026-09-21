@@ -4,6 +4,7 @@ import SwiftUI
 /// FFT bands drive its width/detail; bass drives the breathing radius.
 struct StandbyAudioRingView: View {
     @ObservedObject var engine: AudioEngine
+    var tintColorScheme: ColorScheme = .dark
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
@@ -13,7 +14,7 @@ struct StandbyAudioRingView: View {
 
     var body: some View {
         AudioRingMetalView(engine: engine, active: running, reduceMotion: reduceMotion,
-                           tint: engine.activeControlTint(for: .dark))
+                           tint: engine.activeControlTint(for: tintColorScheme))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
