@@ -2,10 +2,19 @@ import SwiftUI
 import AppKit
 import Combine
 
+struct CreditsHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 { value = next }
+    }
+}
+
 struct AboutView: View {
     @State private var versionCopied = false
-    @State private var creditsOffset: CGFloat = 150
+    @State private var creditsOffset: CGFloat = 60
     @State private var contentHeight: CGFloat = 0
+    @State private var isVisible = false
     
     let timer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     @AppStorage("appTheme") private var appTheme = 0
@@ -78,23 +87,25 @@ struct AboutView: View {
                     .padding(.horizontal, 30)
                     .background(
                         GeometryReader { contentGeo in
-                            Color.clear.onAppear {
-                                contentHeight = contentGeo.size.height
-                            }
+                            Color.clear.preference(key: CreditsHeightKey.self, value: contentGeo.size.height)
                         }
                     )
                     .offset(y: creditsOffset)
-                    .overlay(
-                        ScrollCatcherView(offset: $creditsOffset)
-                    )
+                    .onPreferenceChange(CreditsHeightKey.self) { newHeight in
+                        contentHeight = newHeight
+                    }
                     .onReceive(timer) { _ in
+                        guard isVisible, contentHeight > 0, geo.size.height > 0 else { return }
                         if creditsOffset < -contentHeight {
                             creditsOffset = geo.size.height
                         } else {
-                            creditsOffset -= 0.5
+                            creditsOffset -= 0.6
                         }
                     }
                 }
+                .overlay(
+                    ScrollCatcherView(offset: $creditsOffset)
+                )
                 .mask(
                     LinearGradient(
                         stops: [
@@ -119,55 +130,95 @@ struct AboutView: View {
                     Text("☕️❤️")
                 }
                 
-                HStack(alignment: .bottom) {
-                    Text("This project is and always will be open source, free, and ad-free. You can support the development by making a donation to maintain it over time!.")
-                        .font(.system(size: 12))
-                        .foregroundColor(.primary.opacity(0.7))
-                        .fixedSize(horizontal: false, vertical: true)
-                    
-                    Spacer(minLength: 20)
-                    
-                    HStack(spacing: 12) {
-                        Button("Learn more...") {
-                            if let url = URL(string: "https://github.com/JesusChapman/valentine") {
-                                NSWorkspace.shared.open(url)
-                            }
+                Text("This project is and always will be open source, free, and ad-free. You can support the development by making a donation to maintain it over time!.")
+                    .font(.system(size: 12))
+                    .foregroundColor(.primary.opacity(0.7))
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack(spacing: 8) {
+                    Button(action: {
+                        if let url = URL(string: "https://github.com/JesusChapman/valentine") {
+                            NSWorkspace.shared.open(url)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                        
-                        Button(action: {
-                            if let url = URL(string: "https://liberapay.com/JesusChapman/donate") {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }) {
-                            HStack(spacing: 4) {
-                                Text("lp")
-                                    .font(.system(size: 12, weight: .bold, design: .serif))
-                                    .foregroundColor(.black)
-                                Text("Donate")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(.black)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(Color(hex: "#F6C915"))
-                            .cornerRadius(6)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 11))
+                            Text("Learn more...")
+                                .font(.system(size: 12))
                         }
-                        .buttonStyle(.plain)
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .fixedSize()
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        if let url = URL(string: "https://github.com/sponsors/JesusChapman") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.white)
+                            Text("Sponsor")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color(hex: "#EA4AAA"))
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    .help("GitHub Sponsors")
+                    .fixedSize()
+                    
+                    Button(action: {
+                        if let url = URL(string: "https://liberapay.com/JesusChapman/donate") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        HStack(spacing: 5) {
+                            Text("lp")
+                                .font(.system(size: 12, weight: .bold, design: .serif))
+                                .foregroundColor(.black)
+                            Text("Donate")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.black)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color(hex: "#F6C915"))
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Liberapay")
+                    .fixedSize()
                 }
+                .padding(.top, 2)
             }
-            .padding(20)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
             .background(Color.primary.opacity(0.05))
             .cornerRadius(12)
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
         }
         .frame(width: 650, height: 480)
         .background(WindowAccessor())
         .background(InitialWindowFocus())
         .background(Material.ultraThin)
         .preferredColorScheme(appTheme == 1 ? .light : (appTheme == 2 ? .dark : nil))
+        .onAppear {
+            isVisible = true
+            creditsOffset = 60
+        }
+        .onDisappear {
+            isVisible = false
+        }
     }
     
     private func copyVersion() {

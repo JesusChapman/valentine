@@ -18,9 +18,12 @@ fi
 
 INPUT_APP="${1:-Valentine.app}"
 
-# If default app path was not found in current directory, search DerivedData
+# If default app path was not found in current directory, search DerivedData (prioritizing Release)
 if [ ! -d "$INPUT_APP" ]; then
-    DERIVED_APP=$(find ~/Library/Developer/Xcode/DerivedData/Valentine-*/Build/Products -name "Valentine.app" 2>/dev/null | head -n 1)
+    DERIVED_APP=$(find ~/Library/Developer/Xcode/DerivedData/Valentine-*/Build/Products/Release -name "Valentine.app" 2>/dev/null | head -n 1)
+    if [ -z "$DERIVED_APP" ] || [ ! -d "$DERIVED_APP" ]; then
+        DERIVED_APP=$(find ~/Library/Developer/Xcode/DerivedData/Valentine-*/Build/Products -name "Valentine.app" 2>/dev/null | head -n 1)
+    fi
     if [ -n "$DERIVED_APP" ] && [ -d "$DERIVED_APP" ]; then
         echo "ℹ️  Found application in DerivedData: $DERIVED_APP"
         INPUT_APP="$DERIVED_APP"

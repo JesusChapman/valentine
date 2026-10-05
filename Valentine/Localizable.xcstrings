@@ -1,226 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Main Player" : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": { "stringUnit": { "state": "translated", "value": "Reproductor principal" } },
-        "hi": { "stringUnit": { "state": "translated", "value": "मुख्य प्लेयर" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "メインプレーヤー" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Reprodutor principal" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "主播放器" } }
-      }
-    },
-    "Stand By" : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stand By"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्टैंड बाय"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スタンバイ"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stand By"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "待机"
-          }
-        }
-      }
-    },
-    "Replace Artwork with Audio Ring" : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reemplazar carátula por aro de audio"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "एल्बम कवर की जगह ऑडियो रिंग दिखाएँ"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アートワークをオーディオリングに置き換える"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Substituir capa por anel de áudio"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用音频光环替换专辑封面"
-          }
-        }
-      }
-    },
-    "Show a luminous ring that moves with the music instead of the album artwork." : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Muestra un aro luminoso que se mueve con la música en lugar de la carátula del álbum."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "एल्बम कवर के बजाय संगीत के साथ हिलने वाली चमकदार रिंग दिखाएँ।"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アルバムアートワークの代わりに、音楽に合わせて動く光のリングを表示します。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostra um anel luminoso que se move com a música no lugar da capa do álbum."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "显示随音乐律动的发光圆环，代替专辑封面。"
-          }
-        }
-      }
-    },
-    "Animated Background" : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fondo animado"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "एनिमेटेड पृष्ठभूमि"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アニメーション背景"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fundo animado"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "动态背景"
-          }
-        }
-      }
-    },
-    "Sync Background with Music" : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincronizar fondo con la música"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "संगीत के साथ पृष्ठभूमि सिंक करें"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "背景を音楽に同期"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincronizar fundo com a música"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "背景与音乐同步"
-          }
-        }
-      }
-    },
-    "Gently animate the album colors with the intensity of the music." : {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anima suavemente los colores del álbum según la intensidad de la música."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "संगीत की तीव्रता के अनुसार एल्बम के रंगों को धीरे से एनिमेट करें।"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "音楽の強さに合わせてアルバムの色を穏やかに動かします。"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anime suavemente as cores do álbum conforme a intensidade da música."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "根据音乐强度，让专辑色彩柔和地流动。"
-          }
-        }
-      }
-    },
     "" : {
 
     },
@@ -450,6 +230,41 @@
     "AirPlay" : {
       "comment" : "A label for the AirPlay button.",
       "isCommentAutoGenerated" : true
+    },
+    "Animated Background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo animado"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एनिमेटेड पृष्ठभूमि"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アニメーション背景"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fundo animado"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动态背景"
+          }
+        }
+      }
     },
     "App Theme" : {
       "extractionState" : "manual",
@@ -1574,6 +1389,44 @@
         }
       }
     },
+    "Gently animate the album colors with the intensity of the music." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anima suavemente los colores del álbum según la intensidad de la música."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "संगीत की तीव्रता के अनुसार एल्बम के रंगों को धीरे से एनिमेट करें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音楽の強さに合わせてアルバムの色を穏やかに動かします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anime suavemente as cores do álbum conforme a intensidade da música."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根据音乐强度，让专辑色彩柔和地流动。"
+          }
+        }
+      }
+    },
+    "GitHub Sponsors" : {
+
+    },
     "Glow Color" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1808,6 +1661,9 @@
         }
       }
     },
+    "Liberapay" : {
+
+    },
     "LICENSE" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1987,6 +1843,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "歌词过渡"
+          }
+        }
+      }
+    },
+    "Main Player" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproductor principal"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मुख्य प्लेयर"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メインプレーヤー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprodutor principal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主播放器"
           }
         }
       }
@@ -2488,6 +2379,41 @@
     "Repeat %@" : {
 
     },
+    "Replace Artwork with Audio Ring" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar carátula por aro de audio"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एल्बम कवर की जगह ऑडियो रिंग दिखाएँ"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アートワークをオーディオリングに置き換える"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Substituir capa por anel de áudio"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用音频光环替换专辑封面"
+          }
+        }
+      }
+    },
     "Reset to Defaults" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2780,6 +2706,41 @@
         }
       }
     },
+    "Show a luminous ring that moves with the music instead of the album artwork." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra un aro luminoso que se mueve con la música en lugar de la carátula del álbum."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एल्बम कवर के बजाय संगीत के साथ हिलने वाली चमकदार रिंग दिखाएँ।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アルバムアートワークの代わりに、音楽に合わせて動く光のリングを表示します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra um anel luminoso que se move com a música no lugar da capa do álbum."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示随音乐律动的发光圆环，代替专辑封面。"
+          }
+        }
+      }
+    },
     "Show in Finder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2870,6 +2831,41 @@
         }
       }
     },
+    "Sponsor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sponsor"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रायोजक"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スポンサー"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sponsor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "赞助"
+          }
+        }
+      }
+    },
     "Spotlight" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2901,6 +2897,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "聚光灯"
+          }
+        }
+      }
+    },
+    "Stand By" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stand By"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्टैंड बाय"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スタンバイ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stand By"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待机"
           }
         }
       }
@@ -3006,6 +3037,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切换到迷你播放器"
+          }
+        }
+      }
+    },
+    "Sync Background with Music" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar fondo con la música"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "संगीत के साथ पृष्ठभूमि सिंक करें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景を音楽に同期"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar fundo com a música"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景与音乐同步"
           }
         }
       }
