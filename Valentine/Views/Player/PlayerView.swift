@@ -14,10 +14,11 @@ struct PlayerView: View {
     
     var body: some View {
         GeometryReader { proxy in
-            let bottomControlsHeight: CGFloat = 265
-            let bottomPadding: CGFloat = 16
-            let topPadding: CGFloat = 8
-            let availableHeight = max(proxy.size.height - bottomControlsHeight - bottomPadding - topPadding, 100)
+            let bottomControlsHeight: CGFloat = 280
+            let bottomPadding: CGFloat = 28
+            let topPadding: CGFloat = 12
+            let artworkControlsGap: CGFloat = 16
+            let availableHeight = max(proxy.size.height - bottomControlsHeight - bottomPadding - topPadding - artworkControlsGap, 100)
             let availableWidth = max(proxy.size.width - 48, 100)
             let ringSide = max(min(min(availableWidth, availableHeight), 480), 100)
             let artworkSide = max(min(min(availableWidth, availableHeight), 325), 100)
@@ -58,11 +59,13 @@ struct PlayerView: View {
                 .id(engine.currentTrack?.id)
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 .animation(.easeInOut(duration: 0.4), value: engine.currentTrack?.id)
-                .frame(maxWidth: .infinity)
-                .frame(height: availableHeight)
+                .frame(maxWidth: .infinity, maxHeight: availableHeight, alignment: .bottom)
+
+                Spacer()
+                    .frame(height: artworkControlsGap)
 
                 // Controls area
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     WaveformView(engine: engine)
                         .frame(height: 50)
                         .padding(.horizontal, 32)
