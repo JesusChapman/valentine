@@ -4,6 +4,7 @@ Valentine/Config/Secrets.swift
 
 # Generated release artifacts
 dist/
+build/
 
 # OS metadata
 .DS_Store
